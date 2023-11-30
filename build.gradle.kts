@@ -12,6 +12,8 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("io.ktor:ktor-server-netty:2.3.6")
+    implementation("ch.qos.logback:logback-classic:1.4.7")
 }
 
 tasks.test {
