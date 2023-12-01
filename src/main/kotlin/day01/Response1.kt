@@ -5,5 +5,6 @@ import util.BigIntegerWithJson
 
 @Serializable
 data class Response1(
-    val result: BigIntegerWithJson
+    val solution1: BigIntegerWithJson,
+    val solution2: BigIntegerWithJson
 )
