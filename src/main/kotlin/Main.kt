@@ -6,7 +6,6 @@ import io.ktor.server.response.*
 import io.ktor.server.engine.*
 import io.ktor.server.request.*
 import kotlinx.serialization.json.Json
-import java.math.BigInteger
 
 fun main(args: Array<String>) {
 // TODO: Add port parameter
@@ -17,8 +16,8 @@ fun main(args: Array<String>) {
             }
             post("/day01") {
                 val input = call.receiveText()
-                val solution1 = day01.Day01().part1(input)
-                val solution2 = BigInteger.ZERO
+                val solution1 = day01.Day01.part1(input)
+                val solution2 = day01.Day01.part2(input)
                 val response = day01.Response1(solution1, solution2)
                 call.respondText(
                     Json.encodeToString(day01.Response1.serializer(), response),
