@@ -1,10 +1,9 @@
-package day01
+package util
 
 import kotlinx.serialization.Serializable
-import util.BigIntegerWithJson
 
 @Serializable
-data class Response1(
+data class NumberResponse(
     val solution1: BigIntegerWithJson,
     val solution2: BigIntegerWithJson
 )

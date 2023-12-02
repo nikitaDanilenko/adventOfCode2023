@@ -1,11 +1,12 @@
-import io.ktor.server.netty.*
-import io.ktor.server.routing.*
-import io.ktor.server.application.*
 import io.ktor.http.*
-import io.ktor.server.response.*
+import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import util.NumberResponse
 
 fun main(args: Array<String>) {
 // TODO: Add port parameter
@@ -18,9 +19,9 @@ fun main(args: Array<String>) {
                 val input = call.receiveText()
                 val solution1 = day01.Day01.part1(input)
                 val solution2 = day01.Day01.part2(input)
-                val response = day01.Response1(solution1, solution2)
+                val response = NumberResponse(solution1, solution2)
                 call.respondText(
-                    Json.encodeToString(day01.Response1.serializer(), response),
+                    Json.encodeToString(NumberResponse.serializer(), response),
                     ContentType.Application.Json
                 )
             }
@@ -28,9 +29,9 @@ fun main(args: Array<String>) {
                 val input = call.receiveText()
                 val solution1 = day02.Day02.part1(input)
                 val solution2 = day02.Day02.part2(input)
-                val response = day02.Response(solution1, solution2)
+                val response = NumberResponse(solution1.toBigInteger(), solution2)
                 call.respondText(
-                    Json.encodeToString(day02.Response.serializer(), response),
+                    Json.encodeToString(NumberResponse.serializer(), response),
                     ContentType.Application.Json
                 )
             }
