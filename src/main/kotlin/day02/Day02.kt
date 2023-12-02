@@ -6,6 +6,7 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
+import java.math.BigInteger
 
 object Day02 {
 
@@ -64,14 +65,15 @@ object Day02 {
         val blue: Int
     )
 
-    fun fitsInto(reveal: Reveal, limit: Int): Boolean = reveal.amount <= limit
 
-    fun fitsIntoAll(reveal: Reveal, limit: Limit): Boolean =
-        when (reveal.color) {
-            Color.RED -> fitsInto(reveal, limit.red)
-            Color.GREEN -> fitsInto(reveal, limit.green)
-            Color.BLUE -> fitsInto(reveal, limit.blue)
+    fun fitsIntoAll(reveal: Reveal, limit: Limit): Boolean {
+        val colorLimit = when (reveal.color) {
+            Color.RED -> limit.red
+            Color.GREEN -> limit.green
+            Color.BLUE -> limit.blue
         }
+        return reveal.amount <= colorLimit
+    }
 
     fun part1(input: String): Int =
         solution1(parseNumberedReveals(input))
@@ -93,5 +95,24 @@ object Day02 {
             .sumOf { numberedReveals -> numberedReveals.number }
         return sum
     }
-    
+
+
+    fun minimalWith(reveals: List<RevealSet>): BigInteger {
+        val map = reveals
+            .flatMap { it.reveals }
+            .groupBy { it.color }
+            .mapValues { it -> it.value.maxOf { it.amount.toBigInteger() } }
+
+        return map.getOrDefault(Color.RED, BigInteger.ZERO) *
+                map.getOrDefault(Color.GREEN, BigInteger.ZERO) *
+                map.getOrDefault(Color.BLUE, BigInteger.ZERO)
+    }
+
+    fun solution2(games: List<NumberedReveals>): BigInteger =
+        games
+            .sumOf { numberedReveals -> minimalWith(numberedReveals.reveals) }
+
+    fun part2(input: String): BigInteger =
+        solution2(parseNumberedReveals(input))
+
 }

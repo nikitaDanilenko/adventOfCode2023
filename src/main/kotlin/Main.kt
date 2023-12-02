@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
             post("/day02") {
                 val input = call.receiveText()
                 val solution1 = day02.Day02.part1(input)
-                val solution2 = 0
+                val solution2 = day02.Day02.part2(input)
                 val response = day02.Response(solution1, solution2)
                 call.respondText(
                     Json.encodeToString(day02.Response.serializer(), response),
