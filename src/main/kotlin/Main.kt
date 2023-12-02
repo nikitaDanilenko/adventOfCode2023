@@ -24,6 +24,16 @@ fun main(args: Array<String>) {
                     ContentType.Application.Json
                 )
             }
+            post("/day02") {
+                val input = call.receiveText()
+                val solution1 = day02.Day02.part1(input)
+                val solution2 = 0
+                val response = day02.Response(solution1, solution2)
+                call.respondText(
+                    Json.encodeToString(day02.Response.serializer(), response),
+                    ContentType.Application.Json
+                )
+            }
         }
     }.start(wait = true)
 }
