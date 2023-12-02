@@ -14,5 +14,9 @@ The output is a JSON object containing both answers.
 # Personal takeaways
 
 1. `gradlew` seems to have issues with `--continuous`, which makes development tedious.
+   Ktor supports reloading, but only after compilation.
 2. The Kotlin syntax is very terse, especially coming from Scala.
-   The different braces (for functions, and lambdas) definitely require some exercise. 
+   The different braces (for functions, and lambdas) definitely require some exercise.
+3. The support for `.env` files is lacking.
+   Essentially, there seems to be one particular library, but it requires manually reading the environment variables,
+   instead of directly providing them before the `application.conf` is parsed.
