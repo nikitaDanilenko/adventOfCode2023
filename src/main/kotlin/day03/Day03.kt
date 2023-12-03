@@ -113,4 +113,37 @@ object Day03 {
         val numbersWithPosition = findNumbers(input)
         return solution1(numbersWithPosition, symbols)
     }
+
+    data class NumberWithAllNeighbours(
+        val number: Int,
+        val neighbours: List<Position>
+    )
+
+    fun solution2(numbersWithPosition: List<NumberWithPosition>, symbols: Map<Position, Char>): BigInteger {
+        val numbersWithNeighbours = numbersWithPosition.map {
+            NumberWithAllNeighbours(
+                number = it.number,
+                neighbours = neighboursOf(it)
+            )
+        }
+        val starPositions = symbols.filterValues { it == '*' }.keys.toList()
+
+        val ratioSum = starPositions
+            .flatMap {
+                val adjacent = numbersWithNeighbours.filter { n -> n.neighbours.contains(it) }
+                when (adjacent.size) {
+                    2 -> listOf(adjacent[0].number.toBigInteger() * adjacent[1].number.toBigInteger())
+                    else -> emptyList()
+                }
+            }
+            .sumOf { it }
+        return ratioSum
+    }
+
+    fun part2(input: String): BigInteger {
+        val symbols = findSymbols(input)
+        val numbersWithPosition = findNumbers(input)
+        return solution2(numbersWithPosition, symbols)
+    }
+
 }
