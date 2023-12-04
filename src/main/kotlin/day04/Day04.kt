@@ -11,24 +11,23 @@ import java.math.BigInteger
 object Day04 {
 
     data class Game(
-        val number: Int,
         val winning: Set<Int>,
         val selected: Set<Int>
     )
 
     // Todo: Parsing newlines creates odd issues, hence we only parse lines individually.
-    object GameParser : Grammar<Game>() {
-        val number by regexToken("\\d+")
-        val spaces by regexToken("\\s*")
-        val colon by literalToken(":")
+    object GameParser : Grammar<Pair<Int, Game>>() {
+        private val number by regexToken("\\d+")
+        private val spaces by regexToken("\\s*")
+        private val colon by literalToken(":")
 
-        val numberParser = number use { text.toInt() }
-        val numbersParser = separatedTerms(numberParser, spaces)
+        private val numberParser = number use { text.toInt() }
+        private val numbersParser = separatedTerms(numberParser, spaces)
 
-        val separator by regexToken("\\|")
-        val card by literalToken("Card", ignore = true)
+        private val separator by regexToken("\\|")
+        private val card by literalToken("Card", ignore = true)
 
-        override val rootParser: Parser<Game> = (
+        override val rootParser: Parser<Pair<Int, Game>> = (
                 skip(card)
                         and skip(spaces)
                         and numberParser
@@ -39,10 +38,10 @@ object Day04 {
                         and skip(separator)
                         and skip(spaces)
                         and numbersParser
-                ).map { t -> Game(t.t1, t.t2.toSet(), t.t3.toSet()) }
+                ).map { t -> t.t1 to Game(t.t2.toSet(), t.t3.toSet()) }
     }
 
-    fun solution1(games: List<Game>): BigInteger =
+    private fun solution1(games: List<Game>): BigInteger =
         games
             .map { g -> g.selected.intersect(g.winning) }
             .sumOf { if (it.isNotEmpty()) BigInteger.valueOf(2L).pow(it.size - 1) else BigInteger.ZERO }
@@ -51,7 +50,28 @@ object Day04 {
         solution1(
             input
                 .lines()
-                .map(GameParser::parseToEnd)
+                .map { l -> GameParser.parseToEnd(l).second }
         )
 
+    private fun solution2(games: List<Pair<Int, Game>>): BigInteger {
+        val map = mutableMapOf(*games.map { it.first to BigInteger.valueOf(1L) }.toTypedArray())
+        val result = games.fold(map) { acc, (number, game) ->
+            // TODO: This feels very wrong due to mutability.
+            List(game.selected.intersect(game.winning).size) { it + 1 + number }
+                .forEach { index ->
+                    acc[index] = acc.getOrDefault(index, BigInteger.ZERO) + acc.getOrDefault(number, BigInteger.ZERO)
+                }
+            acc
+        }
+            .values
+            .sumOf { it }
+        return result
+    }
+
+    fun part2(input: String): BigInteger =
+        solution2(
+            input
+                .lines()
+                .map(GameParser::parseToEnd)
+        )
 }

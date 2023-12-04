@@ -25,7 +25,7 @@ fun Application.module() {
             collectNumberSolutionWith(call, day03.Day03::part1, day03.Day03::part2)
         }
         post("/day04") {
-            collectNumberSolutionWith(call, day04.Day04::part1, { _ -> BigInteger.ZERO })
+            collectNumberSolutionWith(call, day04.Day04::part1, day04.Day04::part2)
         }
     }
 }
