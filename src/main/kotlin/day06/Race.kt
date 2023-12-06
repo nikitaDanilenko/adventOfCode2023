@@ -1,6 +1,8 @@
 package day06
 
+import java.math.BigInteger
+
 data class Race(
-    val time: Int,
-    val distance: Int
+    val time: BigInteger,
+    val distance: BigInteger
 )
