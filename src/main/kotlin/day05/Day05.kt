@@ -13,7 +13,6 @@ object Day05 {
             fun parse(input: String): Result<RangeMap> = runCatching {
                 val parts = input.split(" ").map { it.toBigInteger() }
                 RangeMap(parts.first(), parts[1], parts[2])
-
             }
 
             fun inRange(rangeMap: RangeMap, value: BigInteger): Boolean =
@@ -100,10 +99,6 @@ object Day05 {
         val start: BigInteger,
         val end: BigInteger
     ) {
-        override fun toString(): String =
-            "[$start, $end]"
-
-
         companion object {
 
             private fun fromBounds(start: BigInteger, end: BigInteger): Interval? =
