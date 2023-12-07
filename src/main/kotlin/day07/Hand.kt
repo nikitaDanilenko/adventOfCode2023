@@ -29,7 +29,7 @@ data class Hand(
 
         private fun compareCardLists(list1: List<Card>, list2: List<Card>): Int {
             return list1
-                .zip(list2).map { (c1, c2) -> c1.compareTo(c2) }
+                .zip(list2).map { (c1, c2) -> Card.compare(c1, c2) }
                 .dropWhile { it == 0 }
                 .firstOrNull() ?: 0
         }
@@ -48,6 +48,4 @@ data class Hand(
         }
     }
 
-
 }
-

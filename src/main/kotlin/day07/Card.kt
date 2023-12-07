@@ -1,6 +1,6 @@
 package day07
 
-enum class Card(val symbol: String) : Comparable<Card> {
+enum class Card(val symbol: String) {
     ACE("A"),
     TWO("2"),
     THREE("3"),
@@ -22,7 +22,7 @@ enum class Card(val symbol: String) : Comparable<Card> {
                 Result.success(shortHandMap[input]!!)
             else Result.failure(IllegalArgumentException("Invalid card: $input"))
 
-
+        fun compare(card1: Card, card2: Card): Int = card1.ordinal.compareTo(card2.ordinal)
     }
 }
 
