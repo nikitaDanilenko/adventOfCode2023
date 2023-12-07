@@ -22,7 +22,15 @@ enum class Card(val symbol: String) {
                 Result.success(shortHandMap[input]!!)
             else Result.failure(IllegalArgumentException("Invalid card: $input"))
 
-        fun compare(card1: Card, card2: Card): Int = card1.ordinal.compareTo(card2.ordinal)
+        fun compareNatural(card1: Card, card2: Card): Int = card1.ordinal.compareTo(card2.ordinal)
+
+        private fun jokerOrdinalOf(card: Card): Int = when (card) {
+            JACK -> 0
+            else -> card.ordinal + 1
+        }
+
+        fun compareJoker(card1: Card, card2: Card): Int =
+            jokerOrdinalOf(card1).compareTo(jokerOrdinalOf(card2))
     }
 }
 

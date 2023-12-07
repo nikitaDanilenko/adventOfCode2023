@@ -1,6 +1,6 @@
 package day07
 
-enum class Kind {
+enum class HandType {
     HIGH_CARD,
     ONE_PAIR,
     TWO_PAIR,
@@ -10,6 +10,6 @@ enum class Kind {
     FIVE_OF_A_KIND;
 
     companion object {
-        fun compare(kind1: Kind, kind2: Kind): Int = kind1.ordinal.compareTo(kind2.ordinal)
+        fun compare(handType1: HandType, handType2: HandType): Int = handType1.ordinal.compareTo(handType2.ordinal)
     }
 }
