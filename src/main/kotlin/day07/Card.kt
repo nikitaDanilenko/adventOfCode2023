@@ -1,6 +1,6 @@
 package day07
 
-enum class Card(val symbol: String) {
+enum class Card(val symbol: String) : Comparable<Card> {
     ACE("A"),
     TWO("2"),
     THREE("3"),
