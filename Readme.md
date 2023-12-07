@@ -20,3 +20,7 @@ The output is a JSON object containing both answers.
 3. The support for `.env` files is lacking.
    Essentially, there seems to be one particular library, but it requires manually reading the environment variables,
    instead of directly providing them before the `application.conf` is parsed.
+4. The `better-parse` library lacks composition support.
+   The underlying issue is the `by` delegation for the tokens,
+   which has the side effect that parsing the same token in two different contexts is not possible.
+   
