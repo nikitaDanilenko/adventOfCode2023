@@ -1,7 +1,6 @@
 package day07
 
 enum class Card(val symbol: String) {
-    ACE("A"),
     TWO("2"),
     THREE("3"),
     FOUR("4"),
@@ -13,7 +12,8 @@ enum class Card(val symbol: String) {
     TEN("T"),
     JACK("J"),
     QUEEN("Q"),
-    KING("K");
+    KING("K"),
+    ACE("A");
 
     companion object {
         private val shortHandMap = entries.associateBy(Card::symbol)
