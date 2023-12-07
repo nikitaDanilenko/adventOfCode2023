@@ -38,14 +38,10 @@ data class Hand(
 
 
     override fun compareTo(other: Hand): Int {
-        val thisKind = kindOf(cards)
-        val otherKind = kindOf(other.cards)
-        return when (
-            thisKind.compareTo(otherKind)
-        ) {
-            0 -> compareCardLists(cards, other.cards)
-            else -> thisKind.compareTo(otherKind)
-        }
+        val kindResult = Kind.compare(kindOf(cards), kindOf(other.cards))
+        return if (kindResult != 0)
+            kindResult
+        else compareCardLists(cards, other.cards)
     }
 
 }
