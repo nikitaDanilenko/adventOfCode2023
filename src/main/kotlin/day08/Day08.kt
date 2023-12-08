@@ -17,11 +17,14 @@ object Day08 {
         val right: Position
     )
 
-    fun parseNode(input: String): Pair<Position, Node> {
-        val parts = input.filter { it.isLetter() || it == ' ' }.split(" ")
+    private fun parseNode(input: String): Pair<Position, Node> {
+        val parts = input
+            .filter { it.isLetter() || it.isDigit() || it == ' ' }
+            .split(" ")
+            .filter { it.isNotBlank() }
         val position = Position(parts[0])
-        val left = Position(parts[2])
-        val right = Position(parts[3])
+        val left = Position(parts[1])
+        val right = Position(parts[2])
         return position to Node(left, right)
     }
 
@@ -30,7 +33,7 @@ object Day08 {
         val directions: List<Direction>
     )
 
-    fun parseInput(input: String): Network {
+    private fun parseInput(input: String): Network {
         val lines = input.lines()
         val directions = lines[0].map { Direction.valueOf(it.toString()) }
         val nodes = lines.drop(2).associate(::parseNode)
@@ -55,12 +58,12 @@ object Day08 {
     private fun iterate(
         nodes: Map<Position, Node>,
         position: Position,
-        finalPosition: Position,
+        isFinal: (Position) -> Boolean,
         directions: List<Direction>
     ): Int {
 
         tailrec fun recur(position: Position, steps: Int, directions: List<Direction>): Int {
-            return if (position == finalPosition) {
+            return if (isFinal(position)) {
                 steps
             } else {
                 val (nextPosition, nextDirections) = step(nodes, position, directions)
@@ -77,7 +80,7 @@ object Day08 {
         iterate(
             nodes = network.nodes,
             position = Position("AAA"),
-            finalPosition = Position("ZZZ"),
+            isFinal = { it == Position("ZZZ") },
             directions = network.directions
         )
 
@@ -85,7 +88,34 @@ object Day08 {
     fun part1(input: String): BigInteger =
         solution1(parseInput(input)).toBigInteger()
 
+
+    private fun gcd(x: BigInteger, y: BigInteger): BigInteger =
+        if (y == BigInteger.ZERO) x else gcd(y, x % y)
+
+    private fun lcm(x: BigInteger, y: BigInteger): BigInteger =
+        x * y / gcd(x, y)
+
+    private fun lcmAll(xs: List<BigInteger>): BigInteger =
+        xs.reduce { acc, x -> lcm(acc, x) }
+
+    private fun solution2(
+        network: Network
+    ): BigInteger {
+        val startingPositions = network.nodes.keys.filter { it.name.endsWith("A") }
+        val perPosition = startingPositions.map { position ->
+            iterate(
+                nodes = network.nodes,
+                position = position,
+                isFinal = { it.name.endsWith("Z") },
+                directions = network.directions
+            ).toBigInteger()
+        }
+
+        val lcm = lcmAll(perPosition)
+        return lcm
+    }
+
     fun part2(input: String): BigInteger =
-        BigInteger.ZERO
+        solution2(parseInput(input))
 
 }
