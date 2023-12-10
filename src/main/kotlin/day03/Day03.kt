@@ -26,7 +26,6 @@ object Day03 {
     fun <A> span(xs: List<A>, f: (A) -> Boolean): Pair<List<A>, List<A>> =
         xs.takeWhile(f) to xs.dropWhile(f)
 
-
     fun <A> collectGroupsBy(xs: List<A>, f: (A) -> Boolean): List<List<A>> {
 
         fun recur(list: List<A>): List<List<A>> {
@@ -107,13 +106,6 @@ object Day03 {
             }
             .sumOf { it.number.toBigInteger() }
 
-
-    fun part1(input: String): BigInteger {
-        val symbols = findSymbols(input)
-        val numbersWithPosition = findNumbers(input)
-        return solution1(numbersWithPosition, symbols)
-    }
-
     data class NumberWithAllNeighbours(
         val number: Int,
         val neighbours: List<Position>
@@ -140,10 +132,10 @@ object Day03 {
         return ratioSum
     }
 
-    fun part2(input: String): BigInteger {
+    fun solutions(input: String): Pair<BigInteger, BigInteger> {
         val symbols = findSymbols(input)
         val numbersWithPosition = findNumbers(input)
-        return solution2(numbersWithPosition, symbols)
+        return solution1(numbersWithPosition, symbols) to solution2(numbersWithPosition, symbols)
     }
 
 }

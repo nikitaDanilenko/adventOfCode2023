@@ -89,11 +89,6 @@ object Day05 {
             mapByRangeMapBlocks(instructions.rangeMaps, seed)
         }
 
-    fun part1(input: String): BigInteger =
-        solution1(Instructions.parse(input).getOrThrow())
-
-    fun part2(input: String): BigInteger =
-        solution2(Instructions.parse(input).getOrThrow())
 
     data class Interval(
         val start: BigInteger,
@@ -182,6 +177,11 @@ object Day05 {
         }
 
         return targetIntervals.minOf { it.start }
+    }
+
+    fun solutions(input: String): Pair<BigInteger, BigInteger> {
+        val instructions = Instructions.parse(input).getOrThrow()
+        return solution1(instructions) to solution2(instructions)
     }
 
 }

@@ -75,9 +75,6 @@ object Day06 {
         races.map { choices(it) }
             .fold(BigInteger.ONE) { acc, i -> acc * i }
 
-    fun part1(input: String): BigInteger =
-        solution1(parseInput(input))
-
     private fun parseInput2(input: String): Race {
         val numberLines = input.lines()
             .map {
@@ -91,9 +88,7 @@ object Day06 {
         return Race(numberLines[0], numberLines[1])
     }
 
-    fun part2(input: String): BigInteger {
-        return solution1(listOf(parseInput2(input)))
-    }
-
+    fun solutions(input: String): Pair<BigInteger, BigInteger> =
+        solution1(parseInput(input)) to solution1(listOf(parseInput2(input)))
 
 }

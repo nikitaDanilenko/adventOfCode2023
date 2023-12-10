@@ -6,6 +6,7 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
+import io.ktor.util.reflect.*
 import java.math.BigInteger
 
 object Day04 {
@@ -46,12 +47,6 @@ object Day04 {
             .map { g -> g.selected.intersect(g.winning) }
             .sumOf { if (it.isNotEmpty()) BigInteger.valueOf(2L).pow(it.size - 1) else BigInteger.ZERO }
 
-    fun part1(input: String): BigInteger =
-        solution1(
-            input
-                .lines()
-                .map { l -> GameParser.parseToEnd(l).second }
-        )
 
     private fun solution2(games: List<Pair<Int, Game>>): BigInteger {
         val map = mutableMapOf(*games.map { it.first to BigInteger.valueOf(1L) }.toTypedArray())
@@ -68,10 +63,11 @@ object Day04 {
         return result
     }
 
-    fun part2(input: String): BigInteger =
-        solution2(
-            input
-                .lines()
-                .map(GameParser::parseToEnd)
-        )
+
+    fun solutions(input: String): Pair<BigInteger, BigInteger> {
+        val parsed = input
+            .lines()
+            .map(GameParser::parseToEnd)
+        return solution1(parsed.map { it.second }) to solution2(parsed)
+    }
 }

@@ -66,7 +66,7 @@ object Day02 {
     )
 
 
-    fun fitsIntoAll(reveal: Reveal, limit: Limit): Boolean {
+    private fun fitsIntoAll(reveal: Reveal, limit: Limit): Boolean {
         val colorLimit = when (reveal.color) {
             Color.RED -> limit.red
             Color.GREEN -> limit.green
@@ -75,11 +75,8 @@ object Day02 {
         return reveal.amount <= colorLimit
     }
 
-    fun part1(input: String): Int =
-        solution1(parseNumberedReveals(input))
 
-
-    fun solution1(games: List<NumberedReveals>): Int {
+    private fun solution1(games: List<NumberedReveals>): Int {
         val limit = Limit(12, 13, 14)
         val sum = games
             .filter { numberedReveals ->
@@ -97,7 +94,7 @@ object Day02 {
     }
 
 
-    fun minimalWith(reveals: List<RevealSet>): BigInteger {
+    private fun minimalWith(reveals: List<RevealSet>): BigInteger {
         val map = reveals
             .flatMap { it.reveals }
             .groupBy { it.color }
@@ -108,11 +105,14 @@ object Day02 {
                 map.getOrDefault(Color.BLUE, BigInteger.ZERO)
     }
 
-    fun solution2(games: List<NumberedReveals>): BigInteger =
+    private fun solution2(games: List<NumberedReveals>): BigInteger =
         games
             .sumOf { numberedReveals -> minimalWith(numberedReveals.reveals) }
 
-    fun part2(input: String): BigInteger =
-        solution2(parseNumberedReveals(input))
+    fun solutions(input: String): Pair<BigInteger, BigInteger> {
+        val parsed = parseNumberedReveals(input)
+        return solution1(parsed).toBigInteger() to solution2(parsed)
+    }
+
 
 }

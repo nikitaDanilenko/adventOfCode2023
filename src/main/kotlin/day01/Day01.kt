@@ -4,13 +4,13 @@ import java.math.BigInteger
 
 object Day01 {
 
-    fun digits(string: String): List<Int> =
+    private fun digits(string: String): List<Int> =
         string.flatMap { runCatching { listOf(it.toString().toInt()) }.getOrDefault(listOf()) }
 
-    fun firstAndLast(ints: List<Int>): Result<Int> =
+    private fun firstAndLast(ints: List<Int>): Result<Int> =
         kotlin.runCatching { 10 * ints.first() + ints.last() }
 
-    fun solutionWith(extractDigits: (String) -> List<Int>, input: String): BigInteger =
+    private fun solutionWith(extractDigits: (String) -> List<Int>, input: String): BigInteger =
         input
             .lines()
             .sumOf { line ->
@@ -20,12 +20,9 @@ object Day01 {
                 )
             }
 
-    fun part1(input: String): BigInteger =
-        solutionWith(::digits, input)
-
     // Words like "eightwo" or "oneight" need to be handled such that *both* numbers are found.
     // Hence, letters that are part of another digit are reinserted.
-    fun replace(line: String): String =
+    private fun replace(line: String): String =
         line
             .replace("one", "o1e")
             .replace("two", "t2o")
@@ -39,12 +36,11 @@ object Day01 {
             .replace("zero", "0o")
 
 
-    fun spelledToDigitInLine(string: String): List<Int> =
+    private fun spelledToDigitInLine(string: String): List<Int> =
         digits(replace(string))
 
 
-    fun part2(input: String): BigInteger =
-        solutionWith(::spelledToDigitInLine, input)
-
+    fun solutions(input: String): Pair<BigInteger, BigInteger> =
+        solutionWith(::digits, input) to solutionWith(::spelledToDigitInLine, input)
 
 }

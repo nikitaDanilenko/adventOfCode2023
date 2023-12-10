@@ -16,44 +16,45 @@ fun Application.module() {
             call.respondText("""{ "response" : "Hello, world!!" }""", ContentType.Application.Json)
         }
         post("/day01") {
-            collectNumberSolutionWith(call, day01.Day01::part1, day01.Day01::part2)
+            collectNumberSolutionWith(call, day01.Day01::solutions)
         }
         post("/day02") {
-            collectNumberSolutionWith(call, { i -> day02.Day02.part1(i).toBigInteger() }, day02.Day02::part2)
+            collectNumberSolutionWith(call, day02.Day02::solutions)
         }
         post("/day03") {
-            collectNumberSolutionWith(call, day03.Day03::part1, day03.Day03::part2)
+            collectNumberSolutionWith(call, day03.Day03::solutions)
         }
         post("/day04") {
-            collectNumberSolutionWith(call, day04.Day04::part1, day04.Day04::part2)
+            collectNumberSolutionWith(call, day04.Day04::solutions)
         }
         post("/day05") {
-            collectNumberSolutionWith(call, day05.Day05::part1, day05.Day05::part2)
+            collectNumberSolutionWith(call, day05.Day05::solutions)
         }
         post("/day06") {
-            collectNumberSolutionWith(call, day06.Day06::part1, day06.Day06::part2)
+            collectNumberSolutionWith(call, day06.Day06::solutions)
         }
         post("/day07") {
-            collectNumberSolutionWith(call, day07.Day07::part1, day07.Day07::part2)
+            collectNumberSolutionWith(call, day07.Day07::solutions)
         }
         post("/day08") {
-            collectNumberSolutionWith(call, day08.Day08::part1, day08.Day08::part2)
+            collectNumberSolutionWith(call, day08.Day08::solutions)
         }
         post("/day09") {
-            collectNumberSolutionWith(call, day09.Day09::part1, day09.Day09::part2)
+            collectNumberSolutionWith(call, day09.Day09::solutions)
         }
     }
 }
 
 private suspend fun collectNumberSolutionWith(
     call: ApplicationCall,
-    solution1: (String) -> BigInteger, solution2: (String) -> BigInteger
+    solution: (String) -> Pair<BigInteger, BigInteger>
 
 ): Unit {
     val input = call.receiveText()
+    val solutions = solution(input)
     val response = NumberResponse(
-        solution1(input),
-        solution2(input)
+        solutions.first,
+        solutions.second
     )
     return call.respondText(
         Json.encodeToString(NumberResponse.serializer(), response),

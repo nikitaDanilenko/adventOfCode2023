@@ -84,11 +84,6 @@ object Day08 {
             directions = network.directions
         )
 
-
-    fun part1(input: String): BigInteger =
-        solution1(parseInput(input)).toBigInteger()
-
-
     private fun gcd(x: BigInteger, y: BigInteger): BigInteger =
         if (y == BigInteger.ZERO) x else gcd(y, x % y)
 
@@ -115,7 +110,8 @@ object Day08 {
         return lcm
     }
 
-    fun part2(input: String): BigInteger =
-        solution2(parseInput(input))
-
+    fun solutions(input: String): Pair<BigInteger, BigInteger> {
+        val network = parseInput(input)
+        return solution1(network).toBigInteger() to solution2(network)
+    }
 }

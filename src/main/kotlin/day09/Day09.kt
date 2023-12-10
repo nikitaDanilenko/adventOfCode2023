@@ -13,7 +13,6 @@ object Day09 {
         numbers
             .zipWithNext { a, b -> b - a }
 
-
     private fun next(numbers: List<BigInteger>): BigInteger =
         generateSequence(numbers, ::differences)
             .takeWhile { !it.all { n -> n == BigInteger.ZERO } }
@@ -37,9 +36,8 @@ object Day09 {
     private fun solution2(lists: List<List<BigInteger>>): BigInteger =
         lists.sumOf(::previous)
 
-    fun part1(input: String): BigInteger =
-        solution1(parseInput(input))
-
-    fun part2(input: String): BigInteger =
-        solution2(parseInput(input))
+    fun solutions(input: String): Pair<BigInteger, BigInteger> {
+        val parsed = parseInput(input)
+        return solution1(parsed) to solution2(parsed)
+    }
 }
