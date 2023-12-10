@@ -55,8 +55,7 @@ object Day10 {
         tileMap: Map<Tile.Companion.Position, Tile>,
         iteration: Iteration
     ): Pair<Tile.Companion.Position, Tile>? {
-        val unvisitedNeighbours =
-            neighbours(iteration.current, tileMap[iteration.current]!!).filter { !iteration.visited.contains(it) }
+        val unvisitedNeighbours = neighbours(iteration.current, tileMap[iteration.current]!!).minus(iteration.visited)
         return if (unvisitedNeighbours.isEmpty()) null
         else {
             val next = unvisitedNeighbours.first()
