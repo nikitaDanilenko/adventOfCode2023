@@ -6,7 +6,6 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
-import io.ktor.util.reflect.*
 import java.math.BigInteger
 
 object Day04 {
