@@ -20,12 +20,26 @@ object Day09 {
             .toList()
             .sumOf { it.last() }
 
-    fun solution1(lists: List<List<BigInteger>>): BigInteger =
+    private fun previous(numbers: List<BigInteger>): BigInteger =
+        generateSequence(numbers, ::differences)
+            .takeWhile { !it.all { n -> n == BigInteger.ZERO } }
+            .toList()
+            .map { it.first() }
+            .reversed()
+            .reduce { acc, n ->
+                n - acc
+            }
+
+
+    private fun solution1(lists: List<List<BigInteger>>): BigInteger =
         lists.sumOf(::next)
+
+    private fun solution2(lists: List<List<BigInteger>>): BigInteger =
+        lists.sumOf(::previous)
 
     fun part1(input: String): BigInteger =
         solution1(parseInput(input))
 
     fun part2(input: String): BigInteger =
-        BigInteger.ZERO
+        solution2(parseInput(input))
 }
