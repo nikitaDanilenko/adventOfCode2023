@@ -49,14 +49,15 @@ object Day10 {
 
     data class Iteration(
         val visited: Set<Tile.Companion.Position>,
-        val current: Tile.Companion.Position
+        val current: Pair<Tile.Companion.Position, Tile>
     )
 
     private fun step(
         tileMap: Map<Tile.Companion.Position, Tile>,
         iteration: Iteration
     ): Pair<Tile.Companion.Position, Tile>? {
-        val unvisitedNeighbours = neighbours(iteration.current, tileMap[iteration.current]!!).minus(iteration.visited)
+        val unvisitedNeighbours =
+            neighbours(iteration.current.first, tileMap[iteration.current.first]!!).minus(iteration.visited)
         return if (unvisitedNeighbours.isEmpty()) null
         else {
             val next = unvisitedNeighbours.first()
@@ -65,7 +66,7 @@ object Day10 {
     }
 
     private fun iterateStep(
-        start: Tile.Companion.Position,
+        start: Pair<Tile.Companion.Position, Tile>,
         tileMap: Map<Tile.Companion.Position, Tile>
     ): List<Tile.Companion.Position> {
 
@@ -75,7 +76,7 @@ object Day10 {
         ): List<Pair<Tile.Companion.Position, Tile>> {
             val next = step(tileMap, iteration)
             return if (next == null) path
-            else recur(Iteration(iteration.visited + iteration.current, next.first), path + next)
+            else recur(Iteration(iteration.visited + iteration.current.first, next), path + iteration.current)
         }
 
         return recur(Iteration(emptySet(), start), emptyList()).map { it.first }
@@ -83,12 +84,12 @@ object Day10 {
     }
 
     private fun solution1(tileMap: Tile.Companion.TileMap): BigInteger {
-        val steps = iterateStep(tileMap.startPosition, tileMap.tiles)
+        val steps = iterateStep(tileMap.startPosition to tileMap.startTile, tileMap.tiles)
         return ((steps.size + 1) / 2).toBigInteger()
     }
 
     private fun solution2(tileMap: Tile.Companion.TileMap): BigInteger {
-        val steps = iterateStep(tileMap.startPosition, tileMap.tiles)
+        val steps = iterateStep(tileMap.startPosition to tileMap.startTile, tileMap.tiles).also { println(it) }
         val shifted = steps.drop(1) + steps.first()
         // The area of a simple polygon via the shoelace formula (https://en.wikipedia.org/wiki/Shoelace_formula)
         val twiceShoelaceArea = steps.zip(shifted)

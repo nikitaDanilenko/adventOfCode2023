@@ -29,7 +29,7 @@ enum class Tile {
             else SOUTH_AND_EAST
 
         data class Position(val line: Int, val column: Int)
-        data class TileMap(val tiles: Map<Position, Tile>, val startPosition: Position)
+        data class TileMap(val tiles: Map<Position, Tile>, val startPosition: Position, val startTile: Tile)
 
         fun parse(input: String): TileMap {
             val withStart = input.lines()
@@ -51,7 +51,8 @@ enum class Tile {
             )
             return TileMap(
                 (withStart + (startPosition to replacement)).mapValues { it.value!! },
-                startPosition
+                startPosition,
+                replacement
             )
         }
 
