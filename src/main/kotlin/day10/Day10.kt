@@ -1,12 +1,13 @@
 package day10
 
 import java.math.BigInteger
+import kotlin.math.absoluteValue
 
 object Day10 {
 
     fun solutions(input: String): Pair<BigInteger, BigInteger> {
         val parsed = Tile.parse(input)
-        return solution1(parsed) to BigInteger.ZERO
+        return solution1(parsed) to solution2(parsed)
     }
 
     private fun neighbours(
@@ -74,16 +75,28 @@ object Day10 {
         ): List<Pair<Tile.Companion.Position, Tile>> {
             val next = step(tileMap, iteration)
             return if (next == null) path
-            else recur(Iteration(iteration.visited + next.first, next.first), path + next)
+            else recur(Iteration(iteration.visited + iteration.current, next.first), path + next)
         }
 
-        return recur(Iteration(setOf(start), start), emptyList()).map { it.first }
+        return recur(Iteration(emptySet(), start), emptyList()).map { it.first }
 
     }
 
     private fun solution1(tileMap: Tile.Companion.TileMap): BigInteger {
         val steps = iterateStep(tileMap.startPosition, tileMap.tiles)
         return ((steps.size + 1) / 2).toBigInteger()
+    }
+
+    private fun solution2(tileMap: Tile.Companion.TileMap): BigInteger {
+        val steps = iterateStep(tileMap.startPosition, tileMap.tiles).also { println(it.size) }
+        val shifted = steps.drop(1) + steps.first()
+        // The area of a simple polygon via the shoelace formula (https://en.wikipedia.org/wiki/Shoelace_formula)
+        val twiceShoelaceArea = steps.zip(shifted)
+            .sumOf { (pi, pi1) -> (pi.line + pi1.line) * (pi.column - pi1.column) }.absoluteValue.also(::println)
+        // The number of inner points is computed via Pick's theorem (https://en.wikipedia.org/wiki/Pick%27s_theorem)
+        // TODO: There is an off-by-one error here, because depending on the size, one may get one element too many.
+        val inner = (twiceShoelaceArea - steps.size) / 2 + 1
+        return inner.toBigInteger()
     }
 
 }
