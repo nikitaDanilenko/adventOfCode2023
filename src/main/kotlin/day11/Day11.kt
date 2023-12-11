@@ -44,12 +44,19 @@ object Day11 {
         return Image(positions, emptyLines, emptyColumns)
     }
 
-    private fun distance(a: Position, b: Position, emptyLines: Set<Int>, emptyColumns: Set<Int>): Int {
+    private fun distance(
+        a: Position,
+        b: Position,
+        emptyLines: Set<Int>,
+        emptyColumns: Set<Int>,
+        multiplier: BigInteger
+    ): BigInteger {
         val lines = (minOf(a.line, b.line)).rangeTo(maxOf(a.line, b.line)).toSet()
         val columns = (minOf(a.column, b.column)).rangeTo(maxOf(a.column, b.column)).toSet()
         val emptyLs = lines.intersect(emptyLines)
         val emptyCs = columns.intersect(emptyColumns)
-        return (a.line - b.line).absoluteValue + (a.column - b.column).absoluteValue + emptyLs.size + emptyCs.size
+        val manhattanDistance = (a.line - b.line).absoluteValue + (a.column - b.column).absoluteValue
+        return manhattanDistance.toBigInteger() + ((emptyLs.size + emptyCs.size).toBigInteger() * multiplier)
     }
 
     private fun <A> tails(list: List<A>): List<List<A>> {
@@ -61,20 +68,22 @@ object Day11 {
     }
 
 
-    private fun solution1(image: Image): BigInteger {
+    private fun solution(image: Image, multiplier: BigInteger): BigInteger {
         val positionsList = image.positions.toList()
 
         return positionsList.zip(tails(positionsList).drop(1))
             .sumOf { (a, bs) ->
                 bs.sumOf { b ->
-                    distance(a, b, image.emptyLines, image.emptyColumns).toBigInteger()
+                    distance(a, b, image.emptyLines, image.emptyColumns, multiplier)
                 }
             }
     }
 
     fun solutions(input: String): Pair<BigInteger, BigInteger> {
         val image = parseInput(input)
-        return solution1(image) to BigInteger.ZERO
+        // The modifiers are one smaller than the actual multiplier in the task,
+        // because one occurrence is counted via the Manhattan distance already.
+        return solution(image, BigInteger.ONE) to solution(image, BigInteger.valueOf(999999L))
     }
 
 
