@@ -55,7 +55,6 @@ object Day13 {
                     line1 == line2
                 }
                 .map { it.first }
-                .also { println("candidates = $it") }
         val reflectionLines = candidates.filter { reflectsAlongLine(it, lines) }
         return reflectionLines.firstOrNull()
     }
@@ -90,9 +89,9 @@ object Day13 {
     }
 
     private fun findFirstReflection(pattern: Pattern): Int {
-        val horizontal = findHorizontalReflection(pattern).also { println(it) }
-        val vertical = findVerticalReflection(pattern).also { println(it) }
+        val horizontal = findHorizontalReflection(pattern)
+        val vertical = findVerticalReflection(pattern)
         return (horizontal?.let { (1 + it) * 100 }) ?: (1 + vertical!!)
     }
-    
+
 }
