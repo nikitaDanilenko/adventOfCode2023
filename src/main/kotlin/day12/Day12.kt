@@ -60,113 +60,71 @@ object Day12 {
     }
 
 
-    private val freePointCombinationsCache = mutableMapOf<Pair<Int, Int>, List<List<Int>>>()
-    private fun generateFreePointCombinations(
-        freePoints: Int,
-        numberOfGroups: Int,
-    ): List<List<Int>> {
-        fun recur(
-            freePoints: Int,
-            numberOfGroups: Int,
-        ): List<List<Int>> =
-            if (numberOfGroups <= 1)
-                freePointCombinationsCache.getOrPut(Pair(freePoints, numberOfGroups)) {
-                    (0..freePoints).map { free -> listOf(freePoints - free, free) }
-                }
-            else {
-                (0..freePoints).flatMap { first ->
-                    val remaining = freePoints - first
+    // 1. Iteration: Power set construction. Takes about 30 seconds for my input, unusable for part 2.
+    // 2. Iteration: Smart solution construction. Takes about 0.3 seconds for my input, unusable for part 2.
+    // 3. Iteration: Based on https://pastebin.com/djb8RJ85
+    private fun countPossibleSolutions(
+        line: Line
+    ): BigInteger {
 
-                    freePointCombinationsCache.getOrPut(Pair(remaining, numberOfGroups - 1)) {
-                        recur(remaining, numberOfGroups - 1)
-                    }.map { rest ->
-                        listOf(first) + rest
+        val cache = mutableMapOf<Pair<List<Spring>, List<Int>>, BigInteger>()
+
+        fun recur(
+            springs: List<Spring>,
+            groups: List<Int>,
+        ): BigInteger =
+            cache.getOrPut(springs to groups) {
+                if (springs.isEmpty())
+                // No springs, and no groups, i.e. the end has been reached -> one match
+                    if (groups.isEmpty()) BigInteger.ONE
+                    // No springs, but at least one group -> no match
+                    else BigInteger.ZERO
+                else {
+                    when (springs.first()) {
+                        Spring.OPERATIONAL ->
+                            recur(springs.dropWhile { it == Spring.OPERATIONAL }, groups)
+
+                        Spring.UNKNOWN ->
+                            listOf(Spring.OPERATIONAL, Spring.DAMAGED).sumOf { spring ->
+                                recur(listOf(spring) + springs.drop(1), groups)
+                            }
+
+                        Spring.DAMAGED ->
+                            if (groups.isEmpty())
+                            // No groups, and operational springs or question marks -> one match (all question marks become operational springs)
+                                if (springs.all { it != Spring.DAMAGED }) BigInteger.ONE
+                                // No groups, and at least one damaged spring -> no match
+                                else BigInteger.ZERO
+                            else {
+                                val firstGroup = groups.first()
+                                val remainingGroups = groups.drop(1)
+                                if (firstGroup > springs.size)
+                                // A previous group was too large, and the next group cannot be placed -> no match
+                                    BigInteger.ZERO
+                                else {
+                                    val firstSpringGroup = springs.take(firstGroup)
+                                    val remainingSprings = springs.drop(firstGroup)
+                                    if (firstSpringGroup.any { it == Spring.OPERATIONAL })
+                                    // The next group would contain an operational spring -> no match
+                                        BigInteger.ZERO
+                                    else if (remainingGroups.isEmpty()) {
+                                        recur(remainingSprings, remainingGroups)
+                                    } else {
+                                        // First condition: There is more than one group left, but not enough springs to create the second one.
+                                        // Second condition: After the first group there needs to be a non-damaged spring.
+                                        if (springs.size < firstGroup + 1 || remainingSprings.first() == Spring.DAMAGED)
+                                            BigInteger.ZERO
+                                        else
+                                            recur(remainingSprings.drop(1), remainingGroups)
+                                    }
+                                }
+
+                            }
                     }
                 }
             }
 
-        return recur(freePoints, numberOfGroups)
+        return recur(line.springs, line.groups)
     }
 
-    fun possibleMatch(
-        springs: List<Spring>,
-        otherSprings: List<Spring>
-    ): Boolean =
-        springs.zip(otherSprings).all { (a, b) ->
-            a == b || a == Spring.UNKNOWN || b == Spring.UNKNOWN
-        }
-
-    fun countPossibleSolutions(
-        line: Line
-    ): BigInteger {
-        val damagedGroups = line.groups.map { List(it) { Spring.DAMAGED } }
-        val freePoints = (line.springs.size - (line.groups.sumOf { it + 1 }) + 1)
-        println(freePoints)
-        println(line.groups.size)
-        val baseExtensions = generateFreePointCombinations(freePoints, line.groups.size)
-        val extensions = baseExtensions.map { free ->
-            free.mapIndexed { index, f ->
-                // There is a mandatory free space between groups, while the outermost spaces are optional.
-                if (index > 0 && index < free.size - 1)
-                    f + 1
-                else
-                    f
-            }
-        }
-        val candidates = extensions.map { extension ->
-            extension.zip(damagedGroups.plusElement(emptyList())).flatMap { (free, damaged) ->
-                List(free) { Spring.OPERATIONAL } + damaged
-            }
-        }
-        val responses = candidates.filter { possibleMatch(line.springs, it) }
-        return responses.size.toBigInteger()
-    }
-
-
-    // Backtracking related
-    data class RoseTree<A>(
-        val node: A,
-        val children: Lazy<List<RoseTree<A>>>
-    )
-
-    private fun <A> generate(
-        initial: A,
-        extend: (A) -> List<A>
-    ): RoseTree<A> =
-        RoseTree(
-            initial,
-            lazy { extend(initial).map { n -> generate(n, extend) } }
-        )
-
-    private fun <A> prune(
-        tree: RoseTree<A>,
-        canBeDismissed: (A) -> Boolean,
-        isValid: (A) -> Boolean
-    ): List<A> {
-        fun countValid(
-            tree: RoseTree<A>,
-            valid: List<A>
-        ): List<A> =
-            if (canBeDismissed(tree.node)) valid
-            else if (isValid(tree.node)) valid.plusElement(tree.node)
-            else valid + tree.children.value.flatMap { countValid(it, valid) }
-
-        return countValid(tree, emptyList())
-    }
-
-    private fun <A> pruneCountOnly(
-        tree: RoseTree<A>,
-        canBeDismissed: (A) -> Boolean,
-        isValid: (A) -> Boolean
-    ): BigInteger {
-        fun collectValid(
-            tree: RoseTree<A>,
-            valid: BigInteger
-        ): BigInteger =
-            if (canBeDismissed(tree.node)) valid
-            else if (isValid(tree.node)) BigInteger.ONE + valid
-            else valid + tree.children.value.sumOf { collectValid(it, valid) }
-
-        return collectValid(tree, BigInteger.ZERO)
-    }
 }
