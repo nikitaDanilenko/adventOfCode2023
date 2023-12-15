@@ -1,5 +1,6 @@
 package day10
 
+import util.Position
 import java.math.BigInteger
 import kotlin.math.absoluteValue
 
@@ -11,51 +12,51 @@ object Day10 {
     }
 
     private fun neighbours(
-        position: Tile.Companion.Position,
+        position: Position,
         tile: Tile
-    ): Set<Tile.Companion.Position> = when (tile) {
+    ): Set<Position> = when (tile) {
         Tile.VERTICAL -> setOf(
-            Tile.Companion.Position(position.line - 1, position.column),
-            Tile.Companion.Position(position.line + 1, position.column)
+            Position(position.line - 1, position.column),
+            Position(position.line + 1, position.column)
         )
 
         Tile.HORIZONTAL -> setOf(
-            Tile.Companion.Position(position.line, position.column - 1),
-            Tile.Companion.Position(position.line, position.column + 1)
+            Position(position.line, position.column - 1),
+            Position(position.line, position.column + 1)
         )
 
         Tile.NORTH_AND_EAST -> setOf(
-            Tile.Companion.Position(position.line - 1, position.column),
-            Tile.Companion.Position(position.line, position.column + 1)
+            Position(position.line - 1, position.column),
+            Position(position.line, position.column + 1)
         )
 
         Tile.NORTH_AND_WEST -> setOf(
-            Tile.Companion.Position(position.line - 1, position.column),
-            Tile.Companion.Position(position.line, position.column - 1)
+            Position(position.line - 1, position.column),
+            Position(position.line, position.column - 1)
         )
 
         Tile.SOUTH_AND_WEST -> setOf(
-            Tile.Companion.Position(position.line + 1, position.column),
-            Tile.Companion.Position(position.line, position.column - 1)
+            Position(position.line + 1, position.column),
+            Position(position.line, position.column - 1)
         )
 
         Tile.SOUTH_AND_EAST -> setOf(
-            Tile.Companion.Position(position.line + 1, position.column),
-            Tile.Companion.Position(position.line, position.column + 1)
+            Position(position.line + 1, position.column),
+            Position(position.line, position.column + 1)
         )
 
         Tile.EMPTY -> emptySet()
     }
 
     data class Iteration(
-        val visited: Set<Tile.Companion.Position>,
-        val current: Pair<Tile.Companion.Position, Tile>
+        val visited: Set<Position>,
+        val current: Pair<Position, Tile>
     )
 
     private fun step(
-        tileMap: Map<Tile.Companion.Position, Tile>,
+        tileMap: Map<Position, Tile>,
         iteration: Iteration
-    ): Pair<Tile.Companion.Position, Tile>? {
+    ): Pair<Position, Tile>? {
         val unvisitedNeighbours =
             neighbours(iteration.current.first, tileMap[iteration.current.first]!!).minus(iteration.visited)
         return if (unvisitedNeighbours.isEmpty()) null
@@ -66,14 +67,14 @@ object Day10 {
     }
 
     private fun iterateStep(
-        start: Pair<Tile.Companion.Position, Tile>,
-        tileMap: Map<Tile.Companion.Position, Tile>
-    ): List<Tile.Companion.Position> {
+        start: Pair<Position, Tile>,
+        tileMap: Map<Position, Tile>
+    ): List<Position> {
 
         tailrec fun recur(
             iteration: Iteration,
-            path: List<Pair<Tile.Companion.Position, Tile>>
-        ): List<Pair<Tile.Companion.Position, Tile>> {
+            path: List<Pair<Position, Tile>>
+        ): List<Pair<Position, Tile>> {
             val next = step(tileMap, iteration)
             return if (next == null) path
             else recur(Iteration(iteration.visited + iteration.current.first, next), path + iteration.current)
