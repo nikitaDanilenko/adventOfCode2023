@@ -1,7 +1,6 @@
 package day14
 
 import day03.Day03
-import day12.Day12
 import java.math.BigInteger
 
 object Day14 {
@@ -13,21 +12,25 @@ object Day14 {
 
     private fun solution1(dish: Dish): BigInteger {
         val dropped = dropNorth(dish)
-        val result = dropped.columns.map(::dropColumn)
+        return countLoad(dropped)
+    }
 
-        return result.sumOf { column ->
+    private fun countLoad(dish: Dish): BigInteger =
+        dish.columns.sumOf { column ->
             column.mapIndexed { index, tile ->
                 if (tile == Tile.Filled(Rock.ROUND)) {
                     (dish.size - index).toBigInteger()
                 } else {
                     BigInteger.ZERO
                 }
-            }.sumOf { it }.also { println(it) }
+            }.sumOf { it }
         }
-    }
 
     private fun solution2(dish: Dish): BigInteger {
-        return BigInteger.ZERO
+        val (firstSeen, lastSeen) = cycleUntilSeen(dish)
+        val numberOfCycles = firstSeen + ((1000000000 - firstSeen) % (lastSeen - firstSeen))
+        val result = List(numberOfCycles) { ::cycle }.fold(dish) { acc, f -> f(acc) }
+        return countLoad(result)
     }
 
 
@@ -117,5 +120,42 @@ object Day14 {
                 dropped + remainder
             }
         }
+
+    private fun rotateRight(dish: Dish): Dish {
+        val lines = List(dish.size) { index ->
+            dish.columns.map { column -> column[index] }
+        }.reversed()
+        return dish.copy(columns = lines)
+    }
+
+    private fun cycle(dish: Dish): Dish {
+        val functions = listOf(
+            ::dropNorth,
+            ::rotateRight,
+            ::dropNorth,
+            ::rotateRight,
+            ::dropNorth,
+            ::rotateRight,
+            ::dropNorth,
+            ::rotateRight
+        )
+        return functions.fold(dish) { acc, f -> f(acc) }
+    }
+
+    private fun cycleUntilSeen(dish: Dish): Pair<Int, Int> {
+        val seen = mutableSetOf<Pair<Int, Dish>>()
+
+        tailrec fun recur(dish: Dish, index: Int): Pair<Int, Int> {
+            val seenBefore = seen.find { it.second == dish }
+            if (seenBefore != null)
+                return seenBefore.first to index
+            else {
+                seen.add(index to dish)
+                return recur(cycle(dish), index + 1)
+            }
+        }
+
+        return recur(dish, 0)
+    }
 
 }
