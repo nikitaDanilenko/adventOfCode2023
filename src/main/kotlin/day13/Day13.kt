@@ -1,6 +1,7 @@
 package day13
 
 import day03.Day03
+import util.Position
 import java.math.BigInteger
 
 object Day13 {
@@ -28,10 +29,6 @@ object Day13 {
             ).toBigInteger()
         }
 
-    data class Position(
-        val line: Int,
-        val column: Int
-    )
 
     data class Pattern(
         val positions: Set<Position>,

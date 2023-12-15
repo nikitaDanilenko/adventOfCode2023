@@ -1,5 +1,7 @@
 package day10
 
+import util.Position
+
 enum class Tile {
     VERTICAL, HORIZONTAL, NORTH_AND_EAST, NORTH_AND_WEST, SOUTH_AND_WEST, SOUTH_AND_EAST, EMPTY;
 
@@ -28,7 +30,6 @@ enum class Tile {
             else if (hasEastExit(left) && hasWestExit(right)) HORIZONTAL
             else SOUTH_AND_EAST
 
-        data class Position(val line: Int, val column: Int)
         data class TileMap(val tiles: Map<Position, Tile>, val startPosition: Position, val startTile: Tile)
 
         fun parse(input: String): TileMap {

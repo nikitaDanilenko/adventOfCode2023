@@ -1,14 +1,10 @@
 package day03
 
+import util.Position
 import java.math.BigInteger
 
 object Day03 {
-
-    data class Position(
-        val line: Int,
-        val column: Int
-    )
-
+    
     fun findSymbols(input: String): Map<Position, Char> =
         input
             .lines()

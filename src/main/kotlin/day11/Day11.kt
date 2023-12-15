@@ -1,13 +1,10 @@
 package day11
 
+import util.Position
 import java.math.BigInteger
 import kotlin.math.absoluteValue
 
 object Day11 {
-
-    data class Position(
-        val line: Int, val column: Int
-    )
 
     data class Image(
         val positions: Set<Position>,
