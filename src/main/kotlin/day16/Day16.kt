@@ -19,13 +19,23 @@ object Day16 {
         return visited.map { it.position }.toSet().size.toBigInteger()
     }
 
+    //TODO: Very slow, although only non-empty lines and columns are considered.
+    //      It may be worth looking into it.
     private fun solution2(contraption: Contraption): BigInteger {
         val allStartBeams =
             ((0..<contraption.width).map { Beam(Direction.DOWN, Position(0, it)) } +
                     (0..<contraption.width).map { Beam(Direction.UP, Position(contraption.height - 1, it)) } +
                     (0..<contraption.height).map { Beam(Direction.RIGHT, Position(it, 0)) } +
                     (0..<contraption.height).map { Beam(Direction.LEFT, Position(it, contraption.width - 1)) }).toSet()
-        val max = allStartBeams.maxOf { countVisited(contraption, it) }
+        val max = allStartBeams.maxOf { beam ->
+            val isZero = when (beam.direction) {
+                Direction.UP, Direction.DOWN -> contraption.elements.keys.none { it.column == beam.position.column }
+                Direction.LEFT, Direction.RIGHT -> contraption.elements.keys.none { it.line == beam.position.line }
+            }
+            if (isZero) BigInteger.ZERO
+            else
+                countVisited(contraption, beam)
+        }
         return max
     }
 
