@@ -8,14 +8,25 @@ object Day16 {
 
     fun solutions(input: String): Pair<BigInteger, BigInteger> {
         val contraption = parseInput(input)
-        return solution1(contraption) to BigInteger.ZERO
+        return solution1(contraption) to solution2(contraption)
     }
 
-    private fun solution1(contraption: Contraption): BigInteger {
-        val beam = Beam(Direction.RIGHT, Position(0, 0))
-        val visited = iterateStep(beam, contraption)
-        prettyPrintPositions(visited.map { it.position }.toSet(), contraption.height, contraption.width)
+    private fun solution1(contraption: Contraption): BigInteger =
+        countVisited(contraption, Beam(Direction.RIGHT, Position(0, 0)))
+
+    private fun countVisited(contraption: Contraption, startBeam: Beam): BigInteger {
+        val visited = iterateStep(startBeam, contraption)
         return visited.map { it.position }.toSet().size.toBigInteger()
+    }
+
+    private fun solution2(contraption: Contraption): BigInteger {
+        val allStartBeams =
+            ((0..<contraption.width).map { Beam(Direction.DOWN, Position(0, it)) } +
+                    (0..<contraption.width).map { Beam(Direction.UP, Position(contraption.height - 1, it)) } +
+                    (0..<contraption.height).map { Beam(Direction.RIGHT, Position(it, 0)) } +
+                    (0..<contraption.height).map { Beam(Direction.LEFT, Position(it, contraption.width - 1)) }).toSet()
+        val max = allStartBeams.maxOf { countVisited(contraption, it) }
+        return max
     }
 
     enum class MirrorOrientation {
@@ -168,58 +179,16 @@ object Day16 {
             if (beams.isEmpty())
                 visited
             else {
-                val nextBeams = beams.flatMap { moveBeam(it, contraption) }
-                val nextVisited = visited.plus(beams)
-                if (nextVisited == visited)
-                    nextVisited
-                else
+                if (visited.containsAll(beams))
+                    visited
+                else {
+                    val nextVisited = visited.plus(beams)
+                    val nextBeams = beams.minus(visited).flatMap { moveBeam(it, contraption) }
                     iterate(nextBeams.toSet(), nextVisited)
+                }
             }
 
         return iterate(setOf(beam), emptySet())
-    }
-
-    fun prettyPrint(
-        beams: Set<Beam>,
-        contraption: Contraption
-    ): Unit {
-        val lines = (0..<contraption.height).map { lineIndex ->
-            (0..<contraption.width).joinToString("") { columnIndex ->
-                val position = Position(line = lineIndex, column = columnIndex)
-
-                val beamsAtPosition = beams.filter { it.position == position }
-                if (beamsAtPosition.size > 1)
-                    "${beamsAtPosition.size}"
-                else if (beamsAtPosition.size == 1) {
-                    val first = beamsAtPosition.first()
-                    when (first.direction) {
-                        Direction.UP -> "^"
-                        Direction.DOWN -> "v"
-                        Direction.LEFT -> "<"
-                        Direction.RIGHT -> ">"
-                    }
-                } else "."
-            }
-        }
-        println(lines.joinToString("\n"))
-    }
-
-    // TODO: Remove after debugging?
-    fun prettyPrintPositions(
-        set: Set<Position>,
-        height: Int,
-        width: Int
-    ): Unit {
-        val lines = (0..<height).map { lineIndex ->
-            (0..<width).joinToString("") { columnIndex ->
-                val position = Position(line = lineIndex, column = columnIndex)
-
-                if (set.contains(position))
-                    "#"
-                else "."
-            }
-        }
-        println(lines.joinToString("\n"))
     }
 
 }
