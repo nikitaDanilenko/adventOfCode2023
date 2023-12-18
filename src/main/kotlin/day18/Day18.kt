@@ -1,6 +1,7 @@
 package day18
 
 import util.Direction
+import util.Position
 import java.math.BigInteger
 
 object Day18 {
@@ -10,8 +11,13 @@ object Day18 {
         return solution1(instructions) to solution2(instructions)
     }
 
-    private fun solution1(instructions: List<Instruction>): BigInteger =
-        BigInteger.ZERO
+    private fun solution1(instructions: List<Instruction>): BigInteger {
+        val visited = followInstructions(instructions)
+        val twiceArea = Position.twiceShoelaceArea(visited)
+        val all = (twiceArea + ((visited.size).toBigInteger())) / BigInteger.valueOf(2) + BigInteger.ONE
+        return all
+    }
+
 
     private fun solution2(instructions: List<Instruction>): BigInteger =
         BigInteger.ZERO
@@ -21,6 +27,39 @@ object Day18 {
         val steps: Int,
         val color: String
     )
+
+    private fun followInstructions(instructions: List<Instruction>): List<Position> {
+        val startPosition = Position(0, 0)
+        val visited =
+            instructions.fold(startPosition to emptyList<Position>()) { (currentPosition, positions), instruction ->
+                val (nextPosition, visited) =
+                    (0..<instruction.steps).fold(currentPosition to emptyList<Position>()) { (stepPosition, stepped), _ ->
+                        val nextPosition = Position.move(
+                            position = stepPosition,
+                            direction = instruction.direction
+                        )
+                        nextPosition to (stepped.plusElement(nextPosition))
+                    }
+                nextPosition to (positions.plus(visited))
+            }
+
+        return listOf(startPosition) + visited.second.distinct()
+    }
+
+    // TODO: Remove?
+    private fun followInstructions2(instructions: List<Instruction>): List<Position> {
+        val startPosition = Position(0, 0)
+        val corners =
+            instructions.fold(startPosition to emptyList<Position>()) { (currentPosition, positions), instruction ->
+                val nextPosition = Position.move(
+                    position = currentPosition,
+                    direction = instruction.direction,
+                    steps = instruction.steps
+                )
+                nextPosition to (positions.plus(nextPosition))
+            }
+        return corners.second
+    }
 
     private fun parseDirection(input: String): Direction? =
         when (input) {
