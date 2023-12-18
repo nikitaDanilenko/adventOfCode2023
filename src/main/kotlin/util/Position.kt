@@ -13,5 +13,13 @@ data class Position(
                 Direction.LEFT -> position.copy(column = position.column - 1)
                 Direction.RIGHT -> position.copy(column = position.column + 1)
             }
+
+        fun fourNeighbours(position: Position): List<Pair<Direction, Position>> =
+            listOf(
+                Direction.UP to move(position, Direction.UP),
+                Direction.DOWN to move(position, Direction.DOWN),
+                Direction.LEFT to move(position, Direction.LEFT),
+                Direction.RIGHT to move(position, Direction.RIGHT)
+            )
     }
 }
