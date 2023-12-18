@@ -23,4 +23,7 @@ The output is a JSON object containing both answers.
 4. The `better-parse` library lacks composition support.
    The underlying issue is the `by` delegation for the tokens,
    which has the side effect that parsing the same token in two different contexts is not possible.
-   
+5. I like the `.also` method very much.
+   While it's main purpose is clearly debugging,
+   it is immensely helpful in checking what is going on without much ado.
+6. Similarly, I like the `.let` method, since it helps in chaining without introducing pipes (as in Scala or Elm).
