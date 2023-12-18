@@ -8,46 +8,28 @@ object Day18 {
 
     fun solutions(input: String): Pair<BigInteger, BigInteger> {
         val instructions = parseInput(input)
-        return solution1(instructions) to solution2(instructions)
+        val instructionsHex = input.lines().mapNotNull(::parseHexString)
+        return solution1(instructions) to solution1(instructionsHex)
     }
 
     private fun solution1(instructions: List<Instruction>): BigInteger {
-        val visited = followInstructions(instructions)
-        val twiceArea = Position.twiceShoelaceArea(visited)
-        val all = (twiceArea + ((visited.size).toBigInteger())) / BigInteger.valueOf(2) + BigInteger.ONE
+        val boundary = followInstructions(instructions)
+        val twiceArea = Position.twiceShoelaceArea(boundary.corners)
+        val all = (twiceArea + boundary.length) / BigInteger.valueOf(2) + BigInteger.ONE
         return all
     }
-
-
-    private fun solution2(instructions: List<Instruction>): BigInteger =
-        BigInteger.ZERO
 
     data class Instruction(
         val direction: Direction,
         val steps: Int,
-        val color: String
     )
 
-    private fun followInstructions(instructions: List<Instruction>): List<Position> {
-        val startPosition = Position(0, 0)
-        val visited =
-            instructions.fold(startPosition to emptyList<Position>()) { (currentPosition, positions), instruction ->
-                val (nextPosition, visited) =
-                    (0..<instruction.steps).fold(currentPosition to emptyList<Position>()) { (stepPosition, stepped), _ ->
-                        val nextPosition = Position.move(
-                            position = stepPosition,
-                            direction = instruction.direction
-                        )
-                        nextPosition to (stepped.plusElement(nextPosition))
-                    }
-                nextPosition to (positions.plus(visited))
-            }
+    data class Boundary(
+        val corners: List<Position>,
+        val length: BigInteger,
+    )
 
-        return listOf(startPosition) + visited.second.distinct()
-    }
-
-    // TODO: Remove?
-    private fun followInstructions2(instructions: List<Instruction>): List<Position> {
+    private fun followInstructions(instructions: List<Instruction>): Boundary {
         val startPosition = Position(0, 0)
         val corners =
             instructions.fold(startPosition to emptyList<Position>()) { (currentPosition, positions), instruction ->
@@ -58,8 +40,26 @@ object Day18 {
                 )
                 nextPosition to (positions.plus(nextPosition))
             }
-        return corners.second
+        val length = instructions.map { it.steps.toBigInteger() }.sumOf { it }
+
+        return Boundary(corners.second, length)
     }
+
+    private fun parseHexString(input: String): Instruction? {
+        val relevant = input.dropWhile { it != '(' }.drop(2).dropLast(1)
+        val number = relevant.take(5).toInt(16)
+        val direction = parseNumericDirection(relevant.last())
+        return direction?.let { Instruction(it, number) }
+    }
+
+    private fun parseNumericDirection(input: Char): Direction? =
+        when (input) {
+            '0' -> Direction.RIGHT
+            '1' -> Direction.DOWN
+            '2' -> Direction.LEFT
+            '3' -> Direction.UP
+            else -> null
+        }
 
     private fun parseDirection(input: String): Direction? =
         when (input) {
@@ -82,7 +82,6 @@ object Day18 {
                     Instruction(
                         direction = d,
                         steps = s,
-                        color = parts[2].drop(1).dropLast(1)
                     )
                 }
             }
@@ -93,5 +92,5 @@ object Day18 {
 
     private fun parseInput(input: String): List<Instruction> =
         input.lines().mapNotNull(::parseInstruction)
-    
+
 }
