@@ -8,27 +8,25 @@ object Day17 {
 
     fun solutions(input: String): Pair<BigInteger, BigInteger> {
         val parsed = parseInput(input)
-        return solution1(parsed) to BigInteger.ZERO
+        return solution1(parsed) to solution2(parsed)
     }
 
-    fun prettyPrint(weightedGraph: WeightedGraph): String {
-        val lines = (0..<weightedGraph.height).map { line ->
-            (0..<weightedGraph.width).joinToString("") { column ->
-                val position = Position(line = line, column = column)
-                weightedGraph.nodes[position]?.toString() ?: " "
-            }
-        }
-        return lines.joinToString("\n")
-    }
+    private fun solution1(weightedGraph: WeightedGraph): BigInteger =
+        solutionWith(weightedGraph, ::neighboursOf, 1)
 
-    private fun solution1(weightedGraph: WeightedGraph): BigInteger {
+    private fun solution2(weightedGraph: WeightedGraph): BigInteger =
+        solutionWith(weightedGraph, ::neighboursOf2, 4)
+
+    private fun solutionWith(
+        weightedGraph: WeightedGraph,
+        neighboursOf: (WeightedGraph, ReachedPosition) -> List<ReachedPosition>,
+        minNumberOfStepsBeforeEnd: Int
+    ): BigInteger {
         val sourcePosition = Position(0, 0)
         val targetPosition = Position(weightedGraph.height - 1, weightedGraph.width - 1)
-        val distances = dijkstraMutable(weightedGraph, sourcePosition)
-        val targetDistance = distances.filter { it.key.position == targetPosition }
-            .map { it.value }
-            .let { Tropical.minList(it) }
-        return (targetDistance as Tropical.Value).weight.also { println(it) }
+        val distance =
+            dijkstraMutable(weightedGraph, sourcePosition, targetPosition, neighboursOf, minNumberOfStepsBeforeEnd)
+        return (distance as Tropical.Value).weight.also { println(it) }
     }
 
     private fun parseInput(input: String): WeightedGraph {
@@ -97,6 +95,37 @@ object Day17 {
             it.stepsInDirection <= maxNumberOfSameDirection &&
                     insideBoundary(weightedGraph.height, weightedGraph.width, it.position)
         }
+
+    private fun neighboursOf2(
+        weightedGraph: WeightedGraph,
+        reachedPosition: ReachedPosition
+    ): List<ReachedPosition> {
+        val directions = if (reachedPosition.stepsInDirection == 0) {
+            // In the beginning, all directions are possible (boundary check comes later).
+            Direction.entries
+        } else if (reachedPosition.stepsInDirection < 4) {
+            // We need to move at least four steps in the same direction to be able to turn around.
+            listOf(reachedPosition.direction)
+        } else {
+            listOfNotNull(
+                if (reachedPosition.stepsInDirection < 10) reachedPosition.direction else null,
+                leftOf(reachedPosition.direction),
+                rightOf(reachedPosition.direction)
+            )
+        }
+
+        val neighbours = directions.map { direction ->
+            ReachedPosition(
+                position = Position.move(reachedPosition.position, direction),
+                direction = direction,
+                stepsInDirection = 1 + if (direction == reachedPosition.direction) reachedPosition.stepsInDirection else 0
+            )
+        }.filter {
+            insideBoundary(weightedGraph.height, weightedGraph.width, it.position)
+        }
+
+        return neighbours
+    }
 
     sealed interface Tropical {
         data class Value(val weight: BigInteger) : Tropical
@@ -208,12 +237,18 @@ object Day17 {
 
 
     // Essentially, the Dijkstra pseudocode from Wikipedia.
-    private fun dijkstraMutable(weightedGraph: WeightedGraph, source: Position): Map<ReachedPosition, Tropical> {
+    private fun dijkstraMutable(
+        weightedGraph: WeightedGraph,
+        source: Position,
+        target: Position,
+        neighboursOf: (WeightedGraph, ReachedPosition) -> List<ReachedPosition>,
+        minNumberOfStepsBeforeEnd: Int
+    ): Tropical {
         // The direction is irrelevant, because the number of steps is zero.
-        val start = ReachedPosition(source, Direction.UP, 0)
+        val start = ReachedPosition(source, Direction.RIGHT, 0)
         val distances = mutableMapOf(start to Tropical.Value(BigInteger.ZERO) as Tropical)
 
-        val previousDirections = mutableMapOf<Position, List<Direction>>()
+        val previousDirections = mutableMapOf<ReachedPosition, List<Direction>>()
         // TODO: Better with a priority queue than can have tropical priorities.
         val searchQueue = mutableMapOf(start to Tropical.Value(BigInteger.ZERO) as Tropical)
 
@@ -226,7 +261,6 @@ object Day17 {
                         acc
                 }.let { it.key to it.value }
             searchQueue.remove(u)
-            val pathToNext = previousDirections[u.position] ?: emptyList()
             val neighbours = neighboursOf(weightedGraph, u)
 
             neighbours.forEach { arc ->
@@ -239,19 +273,42 @@ object Day17 {
                         currentDistanceToArcTarget
                     )
                 ) {
-                    previousDirections[arc.position] = pathToNext.plusElement(arc.direction)
+                    previousDirections[arc] = (previousDirections[u] ?: emptyList()).plusElement(arc.direction)
                     distances[arc] = distanceThroughUToArcTarget
                     searchQueue[arc] = distanceThroughUToArcTarget
                 }
             }
-
         }
 
-        val targetPosition = Position(line = weightedGraph.height - 1, column = weightedGraph.width - 1)
-        val targetPath = previousDirections[targetPosition]
-        println(targetPath)
+        val targetPaths = previousDirections.filter { it.key.position == target }
 
-        return distances
+        // Horrible hack (necessary for part 2):
+        // Before the crucible stops, it needs to have made at least the correct minimum number of steps in the current direction.
+        // This condition cannot be accounted for by the neighbours alone.
+        // All computed paths are used to "verify" the minimum value by following the paths, and checking whether their directions match.
+        val min = targetPaths.values
+            .filter { allEqual(it.takeLast(minNumberOfStepsBeforeEnd)) }
+            .minOfOrNull { followDirections(start.position, it, weightedGraph) }
+            ?.let { Tropical.Value(it) }
+            ?: Tropical.Infinity
+
+        return min
+    }
+
+    private fun <A> allEqual(list: List<A>): Boolean =
+        list.isEmpty() || list.all { it == list.first() }
+
+    private fun followDirections(
+        start: Position,
+        directions: List<Direction>,
+        weightedGraph: WeightedGraph
+    ): BigInteger {
+        val end = directions.fold(start to BigInteger.ZERO) { (position, weight), direction ->
+            val newPosition = Position.move(position, direction)
+            val newWeight = weight + weightedGraph.nodes[newPosition]!!
+            newPosition to newWeight
+        }
+        return end.second
     }
 
 }
