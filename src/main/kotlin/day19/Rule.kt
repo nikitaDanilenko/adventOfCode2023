@@ -3,7 +3,9 @@ package day19
 sealed interface Rule {
 
     data class Comparison(
-        val predicate: (Categories) -> Boolean,
+        val selector: (Categories) -> Int,
+        val relation: Relation,
+        val boundary: Int,
         val target: String
     ) : Rule
 
@@ -21,10 +23,12 @@ sealed interface Rule {
                 val parts = input.split(":")
                 val comparatorString = parts[0]
                 val selector = Categories.selectorByName(comparatorString.first())
-                val comparator = comparatorBySymbol(comparatorString[1])
+                val relation = Relation.parse(comparatorString[1])
                 val value = comparatorString.drop(2).toInt()
                 Comparison(
-                    predicate = { comparator(selector(it), value) },
+                    selector = selector,
+                    relation = relation,
+                    boundary = value,
                     target = parts[1]
                 )
             } else when (input) {
@@ -33,10 +37,6 @@ sealed interface Rule {
                 else -> GoTo(input)
             }
 
-        private fun comparatorBySymbol(symbol: Char): (Int, Int) -> Boolean = when (symbol) {
-            '>' -> { a, b -> a > b }
-            '<' -> { a, b -> a < b }
-            else -> { _, _ -> false }
-        }
+
     }
 }

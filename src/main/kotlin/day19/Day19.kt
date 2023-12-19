@@ -6,7 +6,6 @@ object Day19 {
 
     fun solutions(input: String): Pair<BigInteger, BigInteger> {
         val instructions = WorkflowsAndParts.parse(input)
-        println(instructions.workflows)
         return solution1(instructions) to solution2(instructions)
     }
 
@@ -36,7 +35,7 @@ object Day19 {
             is Rule.GoTo -> goToTarget(rule.target)
 
             is Rule.Comparison -> {
-                if (rule.predicate(part.categories))
+                if (Relation.compare(rule.relation, rule.selector(part.categories), rule.boundary))
                     goToTarget(rule.target)
                 else StepResult.NextLocal
             }
