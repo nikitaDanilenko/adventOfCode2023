@@ -3,7 +3,7 @@ package day19
 sealed interface Rule {
 
     data class Comparison(
-        val selector: (Categories) -> Int,
+        val selector: Selector,
         val relation: Relation,
         val boundary: Int,
         val target: String
@@ -22,7 +22,7 @@ sealed interface Rule {
             if (input.contains(":")) {
                 val parts = input.split(":")
                 val comparatorString = parts[0]
-                val selector = Categories.selectorByName(comparatorString.first())
+                val selector = Selector.parse(comparatorString.first())
                 val relation = Relation.parse(comparatorString[1])
                 val value = comparatorString.drop(2).toInt()
                 Comparison(
