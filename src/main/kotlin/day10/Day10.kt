@@ -90,7 +90,7 @@ object Day10 {
     }
 
     private fun solution2(tileMap: Tile.Companion.TileMap): BigInteger {
-        val steps = iterateStep(tileMap.startPosition to tileMap.startTile, tileMap.tiles).also { println(it) }
+        val steps = iterateStep(tileMap.startPosition to tileMap.startTile, tileMap.tiles)
         val shifted = steps.drop(1) + steps.first()
         // The area of a simple polygon via the shoelace formula (https://en.wikipedia.org/wiki/Shoelace_formula)
         val twiceShoelaceArea = steps.zip(shifted)
