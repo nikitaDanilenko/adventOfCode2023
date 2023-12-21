@@ -10,7 +10,7 @@ object Day20 {
     }
 
     fun <A> iterate(start: A, steps: Int, function: (A) -> A): A {
-        fun recur(steps: Int, a: A): A = if (steps <= 0) a else recur(steps - 1, function(a))
+        tailrec fun recur(steps: Int, a: A): A = if (steps <= 0) a else recur(steps - 1, function(a))
 
         return recur(steps, start)
     }
@@ -24,6 +24,21 @@ object Day20 {
         return result.high * result.low
     }
 
-    private fun solution2(machine: Machine): BigInteger = BigInteger.ZERO
+
+    private fun solution2(machine: Machine): BigInteger {
+        /* The solution requires a lot of assumptions which have very little to do with the first part.
+           Solution computed by hand using the GraphViz approach:
+           Per each cluster label the flip-flops with 1 if they lead to the conjunction module at the end of the cluster,
+           and 0 if they do not.
+           Then, read the number as a binary number bottom-to-top.
+
+           The assumptions are:
+           * There are distinct clusters of "reasonable" size
+           * The predecessor to "rx" is a conjunction module
+           * All clusters end with a conjunction module
+        */
+
+        return BigInteger.ZERO
+    }
 
 }
