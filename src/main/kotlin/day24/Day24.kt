@@ -17,7 +17,55 @@ object Day24 {
             BigDecimal.valueOf(400000000000000)
         ).toBigInteger()
 
-    private fun solution2(hails: List<Hail>): BigInteger = BigInteger.ZERO
+    /* A naive solution would be to assume that the stone is at p with direction w,
+       and then take three (suitable) hailstones and solve the system of equations
+          p + t1 * 1 = v1 + t1 * d1
+          p + t2 * 1 = v2 + t2 * d2
+          p + t3 * 1 = v3 + t3 * d3
+       However, there are multiple difficulties here:
+       1. There are nine unknowns (p, w, and t, each with three components), giving quite the large system.
+       2. We do not need w.
+       3. We do not need t.
+
+       Particularly the last two points indicate that only 3 equations should be enough,
+       which provides a system that can be solved with closed formulas.
+
+       The actual observation what is necessary is taken from this Reddit solution:
+       https://www.reddit.com/r/adventofcode/comments/18pum3b/comment/kge0mw5/?utm_source=share&utm_medium=web2x&context=3
+     */
+    private fun solution2(hails: List<Hail>): BigInteger {
+        val (hail1, hail2, hail3) = findLinearlyIndependent(hails)
+        val row1 = Position3D.crossProduct(
+            Position3D.minus(hail1.direction, hail2.direction),
+            Position3D.minus(hail1.startPosition, hail2.startPosition)
+        )
+        val row2 = Position3D.crossProduct(
+            Position3D.minus(hail1.direction, hail3.direction),
+            Position3D.minus(hail1.startPosition, hail3.startPosition)
+        )
+        val row3 = Position3D.crossProduct(
+            Position3D.minus(hail2.direction, hail3.direction),
+            Position3D.minus(hail2.startPosition, hail3.startPosition)
+        )
+        val inverse = inverse3x3(row1, row2, row3).also { println("inverse: $it") }
+        val vector = Position3D(
+            Position3D.scalarProduct(
+                Position3D.minus(hail1.direction, hail2.direction),
+                Position3D.crossProduct(hail1.startPosition, hail2.startPosition)
+            ),
+            Position3D.scalarProduct(
+                Position3D.minus(hail1.direction, hail3.direction),
+                Position3D.crossProduct(hail1.startPosition, hail3.startPosition)
+            ),
+            Position3D.scalarProduct(
+                Position3D.minus(hail2.direction, hail3.direction),
+                Position3D.crossProduct(hail2.startPosition, hail3.startPosition)
+            )
+        )
+        val determinant = toBigDecimal(determinant3x3(row1, row2, row3))
+        val solution = matrixTimesVector(inverse, vector).also { println(it) }
+        return (toBigDecimal(solution.x + solution.y + solution.z) / determinant).toBigInteger()
+    }
 
     data class Position3D(
         val x: BigInteger,
@@ -29,6 +77,32 @@ object Day24 {
                 val (x, y, z) = input.replace(" ", "").split(",")
                 return Position3D(x.toBigInteger(), y.toBigInteger(), z.toBigInteger())
             }
+
+            fun scalarProduct(
+                position1: Position3D,
+                position2: Position3D
+            ): BigInteger =
+                position1.x * position2.x + position1.y * position2.y + position1.z * position2.z
+
+            fun crossProduct(
+                position1: Position3D,
+                position2: Position3D
+            ): Position3D =
+                Position3D(
+                    position1.y * position2.z - position1.z * position2.y,
+                    position1.z * position2.x - position1.x * position2.z,
+                    position1.x * position2.y - position1.y * position2.x
+                )
+
+            fun minus(
+                position1: Position3D,
+                position2: Position3D
+            ): Position3D =
+                Position3D(
+                    position1.x - position2.x,
+                    position1.y - position2.y,
+                    position1.z - position2.z
+                )
 
         }
     }
@@ -46,28 +120,14 @@ object Day24 {
         }
     }
 
-    private fun scalarProduct(
-        position1: Position3D,
-        position2: Position3D
-    ): BigInteger =
-        position1.x * position2.x + position1.y * position2.y + position1.z * position2.z
-
-    private fun euclideanNorm2(position: Position3D): BigInteger = scalarProduct(position, position)
-
-    // Cauchy-Schwarz inequality; equality holds iff the vectors are linearly dependent
-    private fun linearlyDependent(position1: Position3D, position2: Position3D): Boolean {
-        val scalarProduct = scalarProduct(position1, position2)
-        return scalarProduct * scalarProduct == euclideanNorm2(position1) * euclideanNorm2(position2)
-    }
-
     sealed interface Solution {
         data class Single(val t1: BigDecimal, val t2: BigDecimal) : Solution
         data object No : Solution
         data object Infinite : Solution
     }
 
-    //
-    fun twoVariableSystem(
+    // Solution for A*x = b, where A is a 2x2 matrix.
+    private fun twoVariableSystem(
         a11: BigInteger,
         a12: BigInteger,
         a21: BigInteger,
@@ -138,13 +198,19 @@ object Day24 {
                 }.size
         }.sum()
 
-    private fun pointOfIntersection2(
-        hail1: Hail,
-        t1: BigDecimal,
-    ): Pair<BigDecimal, BigDecimal> {
-        val intersectionAtX = hail1.startPosition.x.toBigDecimal() + hail1.direction.x.toBigDecimal() * t1
-        val intersectionAtY = hail1.startPosition.y.toBigDecimal() + hail1.direction.y.toBigDecimal() * t1
-        return intersectionAtX to intersectionAtY
+    private fun determinant3x3(
+        row1: Position3D,
+        row2: Position3D,
+        row3: Position3D
+    ): BigInteger {
+        // The determinant of a 3x3 matrix is computed by the Sarrus rule.
+        val diagonal1 = row1.x * row2.y * row3.z
+        val diagonal2 = row1.y * row2.z * row3.x
+        val diagonal3 = row1.z * row2.x * row3.y
+        val negativeDiagonal1 = row1.z * row2.y * row3.x
+        val negativeDiagonal2 = row1.x * row2.z * row3.y
+        val negativeDiagonal3 = row1.y * row2.x * row3.z
+        return diagonal1 + diagonal2 + diagonal3 - negativeDiagonal1 - negativeDiagonal2 - negativeDiagonal3
     }
 
     private fun areLinearlyIndependent(
@@ -153,14 +219,7 @@ object Day24 {
         v3: Position3D
     ): Boolean {
         // 3 vectors are linearly independent iff the determinant of the matrix formed by the vectors is non-zero.
-        // The determinant of a 3x3 matrix is computed by the Sarrus rule.
-        val diagonal1 = v1.x * v2.y * v3.z
-        val diagonal2 = v1.y * v2.z * v3.x
-        val diagonal3 = v1.z * v2.x * v3.y
-        val negativeDiagonal1 = v1.z * v2.y * v3.x
-        val negativeDiagonal2 = v1.x * v2.z * v3.y
-        val negativeDiagonal3 = v1.y * v2.x * v3.z
-        val determinant = diagonal1 + diagonal2 + diagonal3 - negativeDiagonal1 - negativeDiagonal2 - negativeDiagonal3
+        val determinant = determinant3x3(v1, v2, v3)
         return determinant != BigInteger.ZERO
     }
 
@@ -183,5 +242,40 @@ object Day24 {
             }
             .first()
     }
-    
+
+    // Inverse of a 3x3 matrix written row-wise. Formula from https://en.wikipedia.org/wiki/Invertible_matrix#Inversion_of_3_%C3%97_3_matrices
+    // The matrix is not scaled by the inverse of the determinant.
+    private fun inverse3x3(
+        row1: Position3D,
+        row2: Position3D,
+        row3: Position3D
+    ): Triple<Position3D, Position3D, Position3D> {
+        val a = row2.y * row3.z - row2.z * row3.y
+        val b = -row2.x * row3.z + row2.z * row3.x
+        val c = row2.x * row3.y - row2.y * row3.x
+        val d = -row1.y * row3.z + row1.z * row3.y
+        val e = row1.x * row3.z - row1.z * row3.x
+        val f = -row1.x * row3.y + row1.y * row3.x
+        val g = row1.y * row2.z - row1.z * row2.y
+        val h = -row1.x * row2.z + row1.z * row2.x
+        val i = row1.x * row2.y - row1.y * row2.x
+
+        return Triple(
+            Position3D(a, d, g),
+            Position3D(b, e, h),
+            Position3D(c, f, i)
+        )
+    }
+
+    private fun matrixTimesVector(
+        matrix: Triple<Position3D, Position3D, Position3D>,
+        vector: Position3D
+    ): Position3D =
+        Position3D(
+            matrix.first.x * vector.x + matrix.first.y * vector.y + matrix.first.z * vector.z,
+            matrix.second.x * vector.x + matrix.second.y * vector.y + matrix.second.z * vector.z,
+            matrix.third.x * vector.x + matrix.third.y * vector.y + matrix.third.z * vector.z
+        )
+
+
 }
