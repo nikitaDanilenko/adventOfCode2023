@@ -9,26 +9,40 @@ object Day22 {
         return solution1(parsed) to solution2(parsed)
     }
 
-    private fun solution1(bricks: List<Brick>): BigInteger {
-        val dropped = dropAll(bricks).sortedBy { it.first.z }
+    private fun solution1(bricks: List<Brick>): BigInteger =
+        canBeDisintegrated(bricks.sortedBy { it.first.z }).size.toBigInteger()
+
+
+    // The bricks need to be sorted ascending by z to avoid multiple sorts.
+    private fun canBeDisintegrated(bricks: List<Brick>): List<Brick> {
+        val dropped = dropAll(bricks.mapIndexed { index, brick -> index to brick }).sortedBy { it.second.first.z }
+            .map { it.second }
         val hasSupport =
             dropped.associateWith { brick -> hasSupportOf(brick, dropped).filter { other -> other != brick } }
         val supported =
             dropped.associateWith { brick -> supportedBy(brick, dropped).filter { other -> other != brick } }
-        val canBeDisintegrated = dropped.filter { brick ->
+        return dropped.filter { brick ->
             val supportedByBrick = supported[brick]!!
-            val condition = supportedByBrick.all {
+            supportedByBrick.all {
                 val supportingBricks = hasSupport[it]!!
                 supportingBricks.size > 1
             }
-            if (condition) println(brick)
-            condition
         }
-        return canBeDisintegrated.size.toBigInteger()
     }
 
     private fun solution2(bricks: List<Brick>): BigInteger {
-        return BigInteger.ZERO
+        val sorted = bricks.sortedBy { it.first.z }.mapIndexed { index, brick -> index to brick }
+        val dropped = dropAll(sorted)
+        val canBeDisintegrated = canBeDisintegrated(sorted.map { it.second }).toSet()
+        val remaining = dropped.toSet().filter { !canBeDisintegrated.contains(it.second) }
+        val number =
+            remaining.sumOf { brick ->
+                val without = dropped - brick
+                val droppedWithout = dropAll(without).toSet()
+                val moved = droppedWithout.minus(without.toSet())
+                moved.size
+            }
+        return number.toBigInteger()
     }
 
     data class Position(
@@ -97,12 +111,13 @@ object Day22 {
         return newBrick to newHeightMap
     }
 
-    private fun dropAll(bricks: List<Brick>): List<Brick> =
+    // Assumes a sorted list of bricks.
+    // The assumption allows a single sort, rather than multiple sorts in the second part.
+    private fun dropAll(bricks: List<Pair<Int, Brick>>): List<Pair<Int, Brick>> =
         bricks
-            .sortedBy { it.first.z }
-            .fold(HeightMap(emptyMap()) to emptyList<Brick>()) { acc, brick ->
+            .fold(HeightMap(emptyMap()) to emptyList<Pair<Int, Brick>>()) { acc, (index, brick) ->
                 val (dropped, map) = drop(brick, acc.first)
-                map to (acc.second + dropped)
+                map to (acc.second + (index to dropped))
             }.second
 
     private fun supportedBy(brick: Brick, bricks: List<Brick>): List<Brick> {
@@ -124,5 +139,5 @@ object Day22 {
             }
         }
     }
-    
+
 }
