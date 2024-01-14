@@ -30,6 +30,11 @@ object Day22 {
         }
     }
 
+    // There are various possible improvements here:
+    // - avoid recomputation of 'canBeDisintegrated'
+    // - embrace set operations
+    // - use a more graph-theoretic approach.
+    // However, for the input the function only needs about 10 seconds, which is ok.
     private fun solution2(bricks: List<Brick>): BigInteger {
         val sorted = bricks.sortedBy { it.first.z }.mapIndexed { index, brick -> index to brick }
         val dropped = dropAll(sorted)
