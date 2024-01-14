@@ -35,6 +35,10 @@ object Day22 {
     // - embrace set operations
     // - use a more graph-theoretic approach.
     // However, for the input the function only needs about 10 seconds, which is ok.
+
+    // The pair approach seems to not do anything, but in reality it adds a discriminator for the bricks.
+    // Otherwise, it is possible that a brick lands, where the currently studied brick is removed,
+    // which leads to missing moved bricks.
     private fun solution2(bricks: List<Brick>): BigInteger {
         val sorted = bricks.sortedBy { it.first.z }.mapIndexed { index, brick -> index to brick }
         val dropped = dropAll(sorted)
