@@ -78,6 +78,9 @@ fun Application.module() {
         post("/day21") {
             collectNumberSolutionWith(call, day21.Day21::solutions)
         }
+        post("/day22") {
+            collectNumberSolutionWith(call, day22.Day22::solutions)
+        }
         post("/day24") {
             collectNumberSolutionWith(call, day24.Day24::solutions)
         }
