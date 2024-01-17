@@ -1,5 +1,6 @@
 package day23
 
+import util.Backtracking
 import util.Direction
 import util.Position
 import java.math.BigInteger
@@ -14,7 +15,29 @@ object Day23 {
     private fun solution1(graph: Graph): BigInteger {
         val edgeGraph = Graph.flattenToJunctions(graph)
 
-        return BigInteger.ZERO
+        val generated = Backtracking.generate(
+            initial = WeightedPosition(Graph.source, 0),
+            extend = { position ->
+                edgeGraph.adjacency[position.position]?.map {
+                    WeightedPosition(
+                        it.position,
+                        position.weight + it.weight
+                    )
+                }
+                    ?: emptyList()
+            }
+        )
+
+        val pruned = Backtracking
+            .prune(
+                generated,
+                canBeDismissed = { false },
+                isValid = { it.position == Graph.target(graph) }
+            )
+            .map { it.weight - 1 }
+            .maxOf { it }
+
+        return pruned.toBigInteger()
     }
 
     private fun solution2(graph: Graph): BigInteger = BigInteger.ZERO
@@ -60,6 +83,9 @@ object Day23 {
                 )
             }
 
+            val source: Position = Position(line = 0, column = 1)
+            fun target(graph: Graph): Position = Position(graph.height - 1, graph.width - 2)
+
             fun tileOrWall(graph: Graph, position: Position): Tile = graph.tiles[position] ?: Tile.Wall
 
             fun neighbours(
@@ -89,15 +115,13 @@ object Day23 {
             }
 
             fun nextJunctionOrEnd(graph: Graph, position: Position): CorridorEnd {
-                fun follow(position: Position, visited: Set<Position>, distance: Int): CorridorEnd {
-                    if (isJunction(graph, position) || position == Position(
-                            line = graph.height - 1,
-                            column = graph.width - 2
-                        )
-                    ) {
-                        return CorridorEnd(position, distance, visited.any { graph.tiles[it] is Tile.Slope })
+                val target = target(graph)
+
+                fun follow(positionInner: Position, visited: Set<Position>, distance: Int): CorridorEnd {
+                    if (isJunction(graph, positionInner) || positionInner == target) {
+                        return CorridorEnd(positionInner, distance, visited.any { graph.tiles[it] is Tile.Slope })
                     } else {
-                        val next = neighbours(graph, position, deadEndSlopesAllowed = false)
+                        val next = neighbours(graph, positionInner, deadEndSlopesAllowed = false)
                             .first {
                                 tileOrWall(
                                     graph,
@@ -105,7 +129,7 @@ object Day23 {
                                 ) != Tile.Slope(Direction.opposite(it.first)) && !visited.contains(it.second)
                             }
                             .second
-                        return follow(next, visited + position, distance + 1)
+                        return follow(next, visited + positionInner, distance + 1)
                     }
                 }
 
@@ -113,6 +137,8 @@ object Day23 {
             }
 
             fun flattenToJunctions(graph: Graph): EdgeGraph {
+
+                val target = target(graph)
 
                 fun flatten(
                     expanded: Set<Position>,
@@ -122,21 +148,26 @@ object Day23 {
                     if (junctions.isEmpty())
                         return edges
                     else {
-                        val nextArcs = junctions.flatMap { junction ->
-                            neighbours(graph, junction, deadEndSlopesAllowed = false).flatMap { (_, position) ->
-                                val next = nextJunctionOrEnd(graph, position)
-                                if (next.oneWay) {
-                                    setOf(WeightedArc(junction, next.position, next.length))
-                                } else {
-                                    setOf(
-                                        WeightedArc(junction, next.position, next.length),
-                                        WeightedArc(next.position, junction, next.length)
-                                    )
+                        val nextArcs = junctions
+                            .flatMap { junction ->
+                                neighbours(graph, junction, deadEndSlopesAllowed = false).flatMap { (_, position) ->
+                                    val next = nextJunctionOrEnd(graph, position)
+                                    if (next.oneWay) {
+                                        setOf(WeightedArc(junction, next.position, next.length))
+                                    } else {
+                                        setOf(
+                                            WeightedArc(junction, next.position, next.length),
+                                            WeightedArc(next.position, junction, next.length)
+                                        )
+                                    }
                                 }
                             }
-                        }.filter { it.from != it.to }
+                            // The filter should not be necessary, but there is an error somewhere, so it is.
+                            .filter { it.from != it.to }
                         val nextExpanded = expanded + junctions
-                        val nextJunctions = nextArcs.map { it.to }.toSet() - nextExpanded
+                        // If the target has been reached once, it is not a junction, and going back from there
+                        // causes strange behaviour. Luckily, going back also does not make sense.
+                        val nextJunctions = nextArcs.map { it.to }.toSet() - nextExpanded - target
                         return flatten(
                             nextExpanded,
                             nextJunctions,
@@ -148,10 +179,9 @@ object Day23 {
                 // The first junction is found manually, because 'flatten' only makes sense for junctions,
                 // but the first step is not a junction.
                 // N.B.: The solution seems extremely convoluted.
-                val start = Position(line = 0, column = 1)
-                val firstJunction = nextJunctionOrEnd(graph, start)
+                val firstJunction = nextJunctionOrEnd(graph, source)
                 val junctionEdges = flatten(emptySet(), setOf(firstJunction.position), emptySet()) + WeightedArc(
-                    start,
+                    source,
                     firstJunction.position,
                     firstJunction.length
                 )

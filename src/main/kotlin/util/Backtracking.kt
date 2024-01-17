@@ -19,6 +19,30 @@ object Backtracking {
             lazy { extend(initial).map { n -> generate(n, extend) } }
         )
 
+    fun <A> prune(
+        tree: RoseTree<A>,
+        canBeDismissed: (A) -> Boolean,
+        isValid: (A) -> Boolean
+    ): List<A> {
+        val visited = mutableSetOf<A>()
+
+        fun collectValid(
+            tree: RoseTree<A>,
+            valid: List<A>
+        ): List<A> =
+            if (canBeDismissed(tree.node)) valid
+            else if (isValid(tree.node))
+                if (visited.contains(tree.node)) {
+                    valid
+                } else {
+                    visited.add(tree.node)
+                    valid + tree.node
+                }
+            else valid.plus(tree.children.value.flatMap { collectValid(it, valid) })
+
+        return collectValid(tree, emptyList())
+    }
+
     fun <A> pruneCountOnly(
         tree: RoseTree<A>,
         canBeDismissed: (A) -> Boolean,
