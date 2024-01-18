@@ -40,7 +40,58 @@ object Day23 {
         return pruned.toBigInteger()
     }
 
-    private fun solution2(graph: Graph): BigInteger = BigInteger.ZERO
+    // This is not a proper solution, but requires guesswork, and manual inspection.
+    // The idea is that the maximum will be found much earlier than all paths can be inspected.
+    // The main issue is that the generated rose tree is not dynamic, meaning that there should be edges
+    // between children of the same parent.
+    // I am very annoyed by this non-solution.
+    private fun solution2(graph: Graph): BigInteger {
+        val nonSloped = graph.copy(
+            tiles = graph.tiles.mapValues { (_, tile) ->
+                when (tile) {
+                    is Tile.Slope -> Tile.Free
+                    else -> tile
+                }
+            }
+        )
+        val edgeGraph = Graph.flattenToJunctions(nonSloped)
+
+        val generated = Backtracking.generate(
+            initial = WeightedPosition(Graph.source, 0) to emptySet<Position>(),
+            extend = { (position, visited) ->
+                val nextPositions =
+                    edgeGraph.adjacency[position.position]?.filter { wp -> !visited.contains(wp.position) }?.map {
+                        WeightedPosition(
+                            it.position,
+                            position.weight + it.weight
+                        )
+                    }
+                        ?: emptyList()
+                val nextVisited = visited + position.position
+                nextPositions.map { it to nextVisited }
+            }
+        )
+
+        var currentMax = 0
+        val pruned = Backtracking
+            .prune(
+                generated,
+                canBeDismissed = { false },
+                isValid = {
+                    val valid = it.first.position == Graph.target(graph)
+                    if (valid) {
+                        val newMax = maxOf(currentMax, it.first.weight - 1)
+                        if (newMax != currentMax)
+                            println(newMax)
+                        currentMax = newMax
+                    }
+                    valid
+                }
+            )
+            .maxOf { it.first.weight - 1 }
+
+        return pruned.toBigInteger()
+    }
 
     data class CorridorEnd(
         val position: Position,
@@ -114,7 +165,7 @@ object Day23 {
                 return atPosition is Tile.Free && neighbours.size > 2
             }
 
-            fun nextJunctionOrEnd(graph: Graph, position: Position, direction: Direction): CorridorEnd {
+            fun nextJunctionOrEnd(graph: Graph, position: Position, direction: Direction): CorridorEnd? {
                 val target = target(graph)
 
                 fun follow(
@@ -122,7 +173,7 @@ object Day23 {
                     seenSlope: Boolean,
                     direction: Direction,
                     distance: Int
-                ): CorridorEnd {
+                ): CorridorEnd? {
                     if (isJunction(graph, positionInner) || positionInner == target) {
                         return CorridorEnd(positionInner, distance, seenSlope)
                     } else {
@@ -131,10 +182,10 @@ object Day23 {
                             positionInner,
                             deadEndSlopesAllowed = false
                         )
-                            .first { it.first != Direction.opposite(direction) }
+                            .firstOrNull { it.first != Direction.opposite(direction) }
 
                         val isSlope = tileOrWall(graph, position) is Tile.Slope
-                        return follow(nextInDirection.second, seenSlope || isSlope, nextInDirection.first, distance + 1)
+                        return nextInDirection?.let { follow(it.second, seenSlope || isSlope, it.first, distance + 1) }
                     }
                 }
 
@@ -161,14 +212,16 @@ object Day23 {
                                     deadEndSlopesAllowed = false
                                 ).flatMap { (direction, position) ->
                                     val next = nextJunctionOrEnd(graph, position, direction)
-                                    if (next.oneWay) {
-                                        setOf(WeightedArc(junction, next.position, next.length))
-                                    } else {
-                                        setOf(
-                                            WeightedArc(junction, next.position, next.length),
-                                            WeightedArc(next.position, junction, next.length)
-                                        )
-                                    }
+                                    next?.let {
+                                        if (it.oneWay) {
+                                            setOf(WeightedArc(junction, it.position, it.length))
+                                        } else {
+                                            setOf(
+                                                WeightedArc(junction, it.position, it.length),
+                                                WeightedArc(it.position, junction, it.length)
+                                            )
+                                        }
+                                    } ?: emptySet()
                                 }
                             }
                             // The filter should not be necessary, but there is an error somewhere, so it is.
@@ -188,7 +241,7 @@ object Day23 {
                 // The first junction is found manually, because 'flatten' only makes sense for junctions,
                 // but the first step is not a junction.
                 // N.B.: The solution seems extremely convoluted.
-                val firstJunction = nextJunctionOrEnd(graph, source, Direction.DOWN)
+                val firstJunction = nextJunctionOrEnd(graph, source, Direction.DOWN)!!
                 val junctionEdges = flatten(emptySet(), setOf(firstJunction.position), emptySet()) + WeightedArc(
                     source,
                     firstJunction.position,
