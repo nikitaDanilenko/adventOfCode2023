@@ -114,26 +114,31 @@ object Day23 {
                 return atPosition is Tile.Free && neighbours.size > 2
             }
 
-            fun nextJunctionOrEnd(graph: Graph, position: Position): CorridorEnd {
+            fun nextJunctionOrEnd(graph: Graph, position: Position, direction: Direction): CorridorEnd {
                 val target = target(graph)
 
-                fun follow(positionInner: Position, visited: Set<Position>, distance: Int): CorridorEnd {
+                fun follow(
+                    positionInner: Position,
+                    seenSlope: Boolean,
+                    direction: Direction,
+                    distance: Int
+                ): CorridorEnd {
                     if (isJunction(graph, positionInner) || positionInner == target) {
-                        return CorridorEnd(positionInner, distance, visited.any { graph.tiles[it] is Tile.Slope })
+                        return CorridorEnd(positionInner, distance, seenSlope)
                     } else {
-                        val next = neighbours(graph, positionInner, deadEndSlopesAllowed = false)
-                            .first {
-                                tileOrWall(
-                                    graph,
-                                    it.second
-                                ) != Tile.Slope(Direction.opposite(it.first)) && !visited.contains(it.second)
-                            }
-                            .second
-                        return follow(next, visited + positionInner, distance + 1)
+                        val nextInDirection = neighbours(
+                            graph,
+                            positionInner,
+                            deadEndSlopesAllowed = false
+                        )
+                            .first { it.first != Direction.opposite(direction) }
+
+                        val isSlope = tileOrWall(graph, position) is Tile.Slope
+                        return follow(nextInDirection.second, seenSlope || isSlope, nextInDirection.first, distance + 1)
                     }
                 }
 
-                return follow(position, emptySet(), 0)
+                return follow(position, false, direction, 0)
             }
 
             fun flattenToJunctions(graph: Graph): EdgeGraph {
@@ -150,8 +155,12 @@ object Day23 {
                     else {
                         val nextArcs = junctions
                             .flatMap { junction ->
-                                neighbours(graph, junction, deadEndSlopesAllowed = false).flatMap { (_, position) ->
-                                    val next = nextJunctionOrEnd(graph, position)
+                                neighbours(
+                                    graph,
+                                    junction,
+                                    deadEndSlopesAllowed = false
+                                ).flatMap { (direction, position) ->
+                                    val next = nextJunctionOrEnd(graph, position, direction)
                                     if (next.oneWay) {
                                         setOf(WeightedArc(junction, next.position, next.length))
                                     } else {
@@ -179,7 +188,7 @@ object Day23 {
                 // The first junction is found manually, because 'flatten' only makes sense for junctions,
                 // but the first step is not a junction.
                 // N.B.: The solution seems extremely convoluted.
-                val firstJunction = nextJunctionOrEnd(graph, source)
+                val firstJunction = nextJunctionOrEnd(graph, source, Direction.DOWN)
                 val junctionEdges = flatten(emptySet(), setOf(firstJunction.position), emptySet()) + WeightedArc(
                     source,
                     firstJunction.position,
